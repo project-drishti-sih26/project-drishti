@@ -78,3 +78,24 @@ ROLE: Role 1 — Backend Engineer
     - app.db.base (Base)
     - enum (standard library)
 """
+
+from sqlalchemy import Column, String, Float, Integer, Boolean, Enum as SQLAlchemyEnum
+from app.db.base import Base
+import enum
+
+class LocationType(str, enum.Enum):
+    ATM = "ATM"
+    BRANCH = "Branch"
+    BC = "Banking_Correspondent"
+
+class PhysicalLocation(Base):
+    __tablename__ = 'physical_locations'
+    location_id = Column(String, primary_key=True, index=True)
+    bank_name = Column(String, nullable=True)
+    location_type = Column(SQLAlchemyEnum(LocationType), nullable=False, default=LocationType.ATM)
+    latitude = Column(Float, nullable=False)
+    longitude = Column(Float, nullable=False)
+    address = Column(String, nullable=True)
+    h3_index = Column(String, nullable=True, index=True)
+    historical_fraud_count = Column(Integer, default=0)
+    is_active = Column(Boolean, default=True)

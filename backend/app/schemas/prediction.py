@@ -74,3 +74,22 @@ ROLE: Role 1 — Backend Engineer
     - typing (List, Optional)
     - datetime (datetime)
 """
+
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import datetime
+
+class AtmPrediction(BaseModel):
+    atm_id: str
+    lat: float
+    lng: float
+    score: float
+    distance_km: float
+    fraud_count: int
+    address: Optional[str] = None
+
+class PredictionPayload(BaseModel):
+    case_id: str
+    top_atms: List[AtmPrediction]
+    time_window: str
+    created_at: Optional[datetime] = None

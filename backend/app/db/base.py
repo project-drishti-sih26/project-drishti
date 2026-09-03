@@ -36,3 +36,6 @@ ROLE: Role 1 — Backend Engineer
     circular import errors. The model files import FROM base.py, not the
     other way around.
 """
+
+from sqlalchemy.orm import declarative_base
+Base = declarative_base()
