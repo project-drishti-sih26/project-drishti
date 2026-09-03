@@ -18,16 +18,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # FastAPI Backend & WebSockets
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: drishti_backend
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-drishti_user}:${POSTGRES_PASSWORD:-drishti_secret}@postgres:5432/${POSTGRES_DB:-drishti_db}
+      DATABASE_URL: postgresql://drishti_user:drishti_secret@postgres:5432/drishti_db
       MULE_TRIGGER_AMOUNT: 50000.0
+      PYTHONUNBUFFERED: 1
     ports:
       - "8000:8000"
     depends_on:
@@ -35,12 +37,14 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+      - ./ml_engine:/ml_engine
+      - ./simulation:/simulation
+    restart: unless-stopped
 
-  # React Frontend Dashboard
+  # React + Vite Frontend Command Center
   frontend:
-    build:
+    build: 
       context: ./frontend
-      dockerfile: Dockerfile
     container_name: drishti_frontend
     ports:
       - "5173:5173"
@@ -49,6 +53,8 @@ services:
       - VITE_WS_URL=ws://localhost:8000/ws/live_alerts
     depends_on:
       - backend
+    restart: unless-stopped
+    command: npm run dev -- --host
 
 volumes:
   postgres_data:
