@@ -27,7 +27,7 @@ backend/
 
 ## 🎯 Deliverables & Key Tasks
 1. **Database Models (`app/models/`):**
-   - Translate the SQL schema from [`Db Design demo.py`](../Db%20Design%20demo.py) into modular SQLAlchemy models (`Account`, `Transaction`, `PhysicalLocation`, `Case`).
+   - Translate the SQL schema from [PROJECT_BLUEPRINT.md](../PROJECT_BLUEPRINT.md#5-complete-database-schema-sqlalchemy-reference) into modular SQLAlchemy models (`Account`, `Transaction`, `PhysicalLocation`, `Case`).
 2. **Data Ingestion API (`app/api/endpoints/transactions.py`):**
    - `POST /api/v1/transactions`: Ingest simulated transactions pushed by the Data Engineer (Role 5).
 3. **Trigger Logic (`app/services/trigger_service.py`):**
