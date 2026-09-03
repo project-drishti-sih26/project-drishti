@@ -69,8 +69,8 @@ To win in SIH, every technical choice must be justified with operational advanta
 |:---:|:---|:---|:---|:---|
 | **Role 1** | **Backend Engineer** | APIs & Core Logic | `backend/` | SQLAlchemy models, FastAPI REST endpoints, ML trigger condition (`> ₹50,000` + Mule), WebSocket broadcast (`/live_alerts`). |
 | **Role 2** | **ML/AI Engineer** | Predictive Brain | `ml_engine/` | LightGBM LambdaMART ranker, `lifelines` survival time model, SHAP explainability strings, cold-start fallback formula. |
-| **Role 3** | **Frontend Engineer (GIS)** | Maps & Radar | `frontend/src/components/Map/` | Mapbox GL JS dark radar, smooth `map.flyTo()` zoom animations, H3 danger hex overlays, custom pulsing markers. |
-| **Role 4** | **Frontend Engineer (UI/UX)** | Dashboard & UX | `frontend/src/components/UI/` | 3-column layout, Live Case Flow visualizer, Top-5 ranking cards, 1-Click Police Dispatch PDF export, human feedback buttons. |
+| **Role 3** | **Frontend Engineer (GIS)** | Maps & Radar | `frontend/gis/` | Mapbox GL JS dark radar, smooth `map.flyTo()` zoom animations, H3 danger hex overlays, custom pulsing markers. |
+| **Role 4** | **Frontend Engineer (UI/UX)** | Dashboard & UX | `frontend/ui_ux/` | 3-column layout, Live Case Flow visualizer, Top-5 ranking cards, 1-Click Police Dispatch PDF export, human feedback buttons. |
 | **Role 5** | **Data Engineer** | World Simulation | `simulation/` | `atms_master.csv`, pre-computed travel distance matrix, 10,000 synthetic mule transactions, presentation trigger `run_live_demo.py`. |
 | **Role 6** | **Integrator & DevOps** | Stability & Pitch | Root, `docker/`, `docs/` | `docker-compose.yml`, CORS configuration, E2E latency optimization (< 2s), presentation deck and live demo choreography. |
 
@@ -237,12 +237,17 @@ project-drishti/
 │   └── README.md
 │
 ├── frontend/                          # 🗺️💻 [Roles 3 & 4: Frontend Engineers]
+│   ├── gis/                           # 🗺️ [Role 3: Maps & GIS Radar]
+│   │   ├── components/                # MapRadar.jsx, Markers.jsx, H3HexLayer.jsx
+│   │   ├── index.js
+│   │   └── README.md
+│   ├── ui_ux/                         # 💻 [Role 4: UI/UX & Dashboard]
+│   │   ├── components/                # Header, SidebarLeft, SidebarRight, Alerts, CaseFlow, DispatchModal
+│   │   ├── index.js
+│   │   └── README.md
 │   ├── public/
 │   ├── src/
 │   │   ├── assets/                    # Map icons, badges, markers
-│   │   ├── components/
-│   │   │   ├── Map/                   # 🗺️ Role 3: MapRadar.jsx, Markers.jsx, H3HexLayer.jsx
-│   │   │   └── UI/                    # 💻 Role 4: SidebarLeft.jsx, SidebarRight.jsx, Alerts.jsx
 │   │   ├── services/                  # WebSocketClient.js & api.js
 │   │   ├── store/                     # useAlertStore.js (Zustand)
 │   │   ├── utils/                     # PDF dispatch generator & formatters
