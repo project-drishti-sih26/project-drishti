@@ -22,32 +22,32 @@ def send_transaction(tx_id, sender, receiver, amount):
 
 def run_demo():
     print("="*60)
-    print("🚀 DRISHTI LIVE DEMO INITIALIZED 🚀")
+    print(">>> DRISHTI LIVE DEMO INITIALIZED <<<")
     print("="*60)
     print("[INFO] Simulating standard banking traffic...")
     time.sleep(1)
 
     # 1. Normal Transaction
-    print(f"\n[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-101 -> ACC-902 (₹2,500.00)")
+    print(f"\n[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-101 -> ACC-902 (Rs. 2,500.00)")
     send_transaction("TXN-001", "ACC-101", "ACC-902", 2500.0)
-    time.sleep(1.5)
+    time.sleep(1.0)
 
     # 2. Normal Transaction
-    print(f"[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-404 -> ACC-511 (₹8,000.00)")
+    print(f"[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-404 -> ACC-511 (Rs. 8,000.00)")
     send_transaction("TXN-002", "ACC-404", "ACC-511", 8000.0)
-    time.sleep(1.5)
+    time.sleep(1.0)
 
     # 3. Normal Transaction
-    print(f"[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-777 -> ACC-303 (₹1,200.00)")
+    print(f"[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-777 -> ACC-303 (Rs. 1,200.00)")
     send_transaction("TXN-003", "ACC-777", "ACC-303", 1200.0)
-    time.sleep(1.5)
+    time.sleep(1.0)
 
     # 4. Critical Mule Transaction
     print("\n" + "!"*60)
     print(f"[ALERT] {datetime.now().strftime('%H:%M:%S')} - SUSPICIOUS ENDPOINT DETECTED")
     print("!"*60)
     print("[WARNING] High-value transfer to known flagged account pattern.")
-    print("[INFO] Routing funds: VICTIM-001 -> MULE-X99 (₹1,50,000.00)")
+    print("[INFO] Routing funds: VICTIM-001 -> MULE-X99 (Rs. 1,50,000.00)")
     
     response = send_transaction("TXN-999", "VICTIM-001", "MULE-X99", 150000.0)
     

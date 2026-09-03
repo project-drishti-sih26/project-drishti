@@ -33,4 +33,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
 
+from app.api.endpoints import websockets
+
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(websockets.router, prefix="/ws", tags=["websockets"])
