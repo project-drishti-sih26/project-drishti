@@ -76,20 +76,47 @@ ROLE: Role 1 — Backend Engineer
 """
 
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 from datetime import datetime
 
-class AtmPrediction(BaseModel):
-    atm_id: str
-    lat: float
-    lng: float
-    score: float
+class ATMCandidate(BaseModel):
+    rank: int
+    location_id: str
+    bank_name: str
+    latitude: float
+    longitude: float
+    address: str
     distance_km: float
-    fraud_count: int
-    address: Optional[str] = None
+    travel_time_mins: float
+    confidence_score: float
+    historical_fraud_count: Optional[int] = 0
+    explanation: str
 
-class PredictionPayload(BaseModel):
+class PredictionTimeWindow(BaseModel):
+    start: Optional[str] = None
+    end: Optional[str] = None
+    minutes_from_now: int = 25
+    confidence: float = 0.58
+    model_source: Optional[str] = None
+
+class PredictionAlert(BaseModel):
+    alert_id: str
     case_id: str
-    top_atms: List[AtmPrediction]
-    time_window: str
-    created_at: Optional[datetime] = None
+    mule_account_id: str
+    victim_account_id: str
+    compromised_amount: float
+    detected_at: str
+    time_window: PredictionTimeWindow
+    top_5_atms: List[ATMCandidate]
+    model_used: str
+    total_candidates_evaluated: int
+
+class CaseStatusUpdate(BaseModel):
+    status: str
+    officer_id: Optional[str] = None
+    officer_notes: Optional[str] = None
+    confirmed_atm_id: Optional[str] = None
+
+# Backwards compatibility aliases
+AtmPrediction = ATMCandidate
+PredictionPayload = PredictionAlert

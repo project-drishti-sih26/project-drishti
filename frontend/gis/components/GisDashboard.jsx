@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import MapRadar from './MapRadar.jsx';
 import TopTargetsPanel from './TopTargetsPanel.jsx';
 import PredictionDetailsPanel from './PredictionDetailsPanel.jsx';
@@ -18,11 +18,12 @@ import { normalizeAlertData } from '../utils/dataNormalizer.js';
  * - Top Predicted Cashout Locations Panel (#1-#5)
  * - Detailed Prediction & ML Explainability Panel ("Why this location?")
  * - Symbology & Threat Ranking Legend
- * - Alert Switcher for Multi-Alert Simulation / Live Stream Readiness
+ * - Real-time WebSocket connection to Project Drishti backend (/ws/live_alerts)
  */
 export const GisDashboard = ({
   initialAlert = mockActiveAlert,
-  onTargetSelect = () => {}
+  onTargetSelect = () => {},
+  wsUrl = import.meta.env?.VITE_WS_URL || 'ws://localhost:8000/ws/live_alerts'
 }) => {
   // Normalize initial alert or fallback
   const normalizedAlert = useMemo(() => {
@@ -34,6 +35,65 @@ export const GisDashboard = ({
     normalizedAlert?.targets?.[0]?.id || mockLocations[0]?.id
   );
   const [flyToTrigger, setFlyToTrigger] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
+
+  // Live WebSocket Connection to Project Drishti Backend (/ws/live_alerts)
+  useEffect(() => {
+    let ws = null;
+    let reconnectTimer = null;
+    let isMounted = true;
+
+    const connectWebSocket = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          if (!isMounted) return;
+          console.log(`[Drishti GIS] WebSocket connected to: ${wsUrl}`);
+          setWsConnected(true);
+        };
+
+        ws.onmessage = (event) => {
+          if (!isMounted) return;
+          try {
+            console.log('[Drishti GIS] Incoming live alert payload received from ML Engine!');
+            const rawData = JSON.parse(event.data);
+            const normalized = normalizeAlertData(rawData);
+            if (normalized && normalized.targets && normalized.targets.length > 0) {
+              setCurrentAlert(normalized);
+              const topTarget = normalized.targets[0];
+              setSelectedTargetId(topTarget.id);
+              setFlyToTrigger(topTarget);
+            }
+          } catch (err) {
+            console.error('[Drishti GIS] Failed to parse WebSocket message:', err);
+          }
+        };
+
+        ws.onerror = (err) => {
+          console.warn('[Drishti GIS] WebSocket encountered error. Reconnecting in 5s...', err);
+          setWsConnected(false);
+        };
+
+        ws.onclose = () => {
+          if (!isMounted) return;
+          console.log('[Drishti GIS] WebSocket closed. Reconnecting in 5s...');
+          setWsConnected(false);
+          reconnectTimer = setTimeout(connectWebSocket, 5000);
+        };
+      } catch (err) {
+        console.warn('[Drishti GIS] WebSocket initialization error:', err);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      isMounted = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (ws) ws.close();
+    };
+  }, [wsUrl]);
 
   // Selected target object resolver
   const selectedTarget = useMemo(() => {
