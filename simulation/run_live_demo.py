@@ -1,7 +1,7 @@
 import requests
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 # The endpoint your backend teammate (Role 1) set up
 API_ENDPOINT = "http://localhost:8000/api/v1/transactions"
@@ -17,7 +17,7 @@ def trigger_presentation_demo():
         "receiver_id": "ACC-MULE-MASTER",
         "amount": 125000.00,        # Must be > ₹50,000
         "account_type": "Mule",     # Must be "Mule"
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "last_known_lat": 28.6139,
         "last_known_lon": 77.2090
     }
