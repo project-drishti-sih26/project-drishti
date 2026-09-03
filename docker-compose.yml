@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Database with PostGIS extension for spatial queries
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: drishti_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-drishti_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-drishti_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-drishti_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drishti_user -d drishti_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend & WebSockets
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: drishti_backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-drishti_user}:${POSTGRES_PASSWORD:-drishti_secret}@postgres:5432/${POSTGRES_DB:-drishti_db}
+      MULE_TRIGGER_AMOUNT: 50000.0
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  # React Frontend Dashboard
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: drishti_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_WS_URL=ws://localhost:8000/ws/live_alerts
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
