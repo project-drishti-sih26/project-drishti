@@ -7,9 +7,15 @@
 
 The **Maps & GIS Radar** module provides law-enforcement and cybercrime investigators with an interactive, real-time tactical command center map. It visualizes predicted cash withdrawal locations, danger zones via Uber H3 hexagons, expected withdrawal time windows, and machine-learning explainability factors.
 
+### 🆓 Zero-Cost & Open-Source Mapping Stack
+* **Map Engine:** [MapLibre GL JS](https://maplibre.org/) (Open-source WebGL interactive vector mapping fork).
+* **Basemap Provider:** [OpenFreeMap](https://openfreemap.org/) using the official Liberty vector style (`https://tiles.openfreemap.org/styles/liberty`).
+* **Spatial Binning:** [Uber H3](https://h3geo.org/) (`h3-js`) for hexagonal spatial risk indexing.
+* **No Accounts / No Credit Cards / No API Tokens Required:** Completely free, keyless, and open.
+
 ### 🏛️ Team Ownership Boundaries
 * **Role 3 (Maps & GIS Radar — THIS MODULE):**
-  * Owns: Mapbox GL JS map canvas, GIS UI, markers, Uber H3 spatial risk rendering, `map.flyTo()` camera engine, popups, target selection, prediction details HUD, and GIS data normalization.
+  * Owns: MapLibre GL JS map canvas, GIS UI, markers, Uber H3 spatial risk rendering, `map.flyTo()` camera engine, popups, target selection, prediction details HUD, and GIS data normalization.
   * Does **NOT** own: Master ATM database, distance matrix, simulation scripts, or ML prediction generation.
 * **Role 5 (Data Engineer):**
   * Owns: `simulation/` directory (`atms_master.csv`, distance matrix, `run_live_demo.py`, simulation data pipelines, source datasets).
@@ -25,9 +31,10 @@ ML Engine / Backend Predictive API (FastAPI / WebSocket)
    ┌──────────┴──────────────────────────┐
    ▼                                     ▼
 [MapRadar.jsx]                 [TopTargetsPanel.jsx]
-├── Mapbox GL JS Canvas        [PredictionDetailsPanel.jsx]
-├── Markers.jsx (DOM Pins)     [ActiveAlertBanner.jsx]
-├── H3HexLayer.jsx (GeoJSON)   [MapLegend.jsx]
+├── MapLibre GL JS Canvas      [PredictionDetailsPanel.jsx]
+├── OpenFreeMap Liberty Tiles  [ActiveAlertBanner.jsx]
+├── Markers.jsx (DOM Pins)     [MapLegend.jsx]
+├── H3HexLayer.jsx (GeoJSON)   
 └── map.flyTo() Camera Engine
 ```
 
@@ -39,7 +46,7 @@ ML Engine / Backend Predictive API (FastAPI / WebSocket)
 frontend/gis/
 ├── components/
 │   ├── GisDashboard.jsx           # Top-level assembled Command Center HUD
-│   ├── MapRadar.jsx               # Mapbox GL JS map instance with camera flyTo engine
+│   ├── MapRadar.jsx               # MapLibre GL JS map instance with OpenFreeMap & flyTo
 │   ├── Markers.jsx                # Tactical markers (ATM, Bank Branch, BC Point)
 │   ├── TopTargetsPanel.jsx        # Top 5 Predicted Locations ranked list
 │   ├── PredictionDetailsPanel.jsx # Target details, cashout window & ML explainability
@@ -48,7 +55,7 @@ frontend/gis/
 │   └── H3HexLayer.jsx             # Real Uber H3 hexagonal polygon rendering & GeoJSON
 ├── utils/
 │   └── dataNormalizer.js          # REST / WebSocket schema normalization utilities
-├── mockData.js                    # Fictional spatial locations & multi-alert scenarios
+├── mockData.js                    # Fictional spatial locations & multi-alert scenarios (Dev fixture only)
 ├── index.js                       # Barrel export for all GIS components & utilities
 └── README.md                      # Comprehensive documentation & integration guide
 ```
@@ -57,33 +64,28 @@ frontend/gis/
 
 ## 📦 Required Dependencies
 
-The GIS module relies on standard industry GIS & UI libraries:
+Install standard open-source GIS libraries:
 
 ```bash
-npm install mapbox-gl h3-js
+npm install maplibre-gl h3-js
 ```
 
-* `mapbox-gl`: High-performance WebGL vector map rendering.
+* `maplibre-gl`: High-performance open-source WebGL vector map rendering.
 * `h3-js`: Uber H3 Discrete Global Grid System for spatial risk hexagonal indexing.
 
 ---
 
-## 🔑 Environment Configuration
+## 🔑 Configuration & Basemap Setup
 
-Create a `.env` file in the frontend/root directory:
-
-```env
-VITE_MAPBOX_TOKEN=pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLXRva2VuIn0...
-```
-
-> **Security Note:** The token is read strictly via `import.meta.env.VITE_MAPBOX_TOKEN`. It is never hardcoded. If the token is missing, the component displays an informative banner without crashing.
+* **Basemap Style URL:** `https://tiles.openfreemap.org/styles/liberty`
+* **API Keys / Tokens:** **None required!** OpenFreeMap and MapLibre do not require any API token, signup, or card configuration.
 
 ---
 
 ## 🚀 Key Features Implemented
 
-### 1. Interactive Tactical Mapbox Radar (`MapRadar.jsx`)
-* Dark theme (`mapbox://styles/mapbox/dark-v11`) centered on India (New Delhi default: `[77.2090, 28.6139]`).
+### 1. Interactive Tactical MapLibre Radar (`MapRadar.jsx`)
+* OpenFreeMap vector basemap centered on India (New Delhi default: `[77.2090, 28.6139]`).
 * Full navigation controls: pitch, rotate, zoom, scale, and fullscreen.
 * Robust unmount cleanup (`markers.remove()`, `removeH3HexLayers(map)`, `map.remove()`) preventing memory leaks.
 
@@ -100,7 +102,7 @@ VITE_MAPBOX_TOKEN=pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLXRva2VuIn0...
 
 ### 3. Real Uber H3 Hexagonal Risk Layers (`H3HexLayer.jsx`)
 * Uses `h3-js` (`cellToBoundary`) to compute real hexagonal boundaries `[[lng, lat], ...]`.
-* Closed GeoJSON linear rings rendered via Mapbox vector polygon layers.
+* Closed GeoJSON linear rings rendered via MapLibre vector polygon layers.
 * Distinct Risk Tiers:
   * 🔴 **CRITICAL (≥ 90%):** `#ef4444` (24% opacity fill + dashed border)
   * 🟠 **HIGH (75%–89%):** `#f59e0b`
@@ -113,7 +115,7 @@ VITE_MAPBOX_TOKEN=pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJ5b3VyLXRva2VuIn0...
 
 ### 5. Selected Target Intelligence HUD (`PredictionDetailsPanel.jsx`)
 * Displays Target Details (Name, Type, Address, Rank, Risk %).
-* **Expected Cash-Out Window:** Dynamic withdrawal window (e.g. `15–35 mins`).
+* **Expected Cash-Out Window:** Dynamic withdrawal window (e.g. `10–25 mins`).
 * **Why This Location?:** ML explainability / SHAP rationale factors.
 
 ### 6. Active Alert HUD Banner (`ActiveAlertBanner.jsx`)
@@ -178,13 +180,3 @@ socket.onmessage = (event) => {
   // Pass directly into <GisDashboard initialAlert={normalizedAlert} />
 };
 ```
-
----
-
-## 🛠️ Troubleshooting
-
-| Issue | Resolution |
-| :--- | :--- |
-| **Mapbox token warning banner appears** | Ensure `VITE_MAPBOX_TOKEN` is configured in `.env`. |
-| **Markers not rendering** | Verify target objects have valid `latitude` and `longitude` numeric fields. |
-| **Hexagons not appearing** | Check that `risk_cells` have valid H3 index strings (e.g. `8860145b23fffff`). |

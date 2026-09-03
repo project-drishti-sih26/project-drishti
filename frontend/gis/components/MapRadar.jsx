@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { renderCustomMarker } from './Markers.jsx';
 import { addH3HexLayers, removeH3HexLayers } from './H3HexLayer.jsx';
 import { TopTargetsPanel } from './TopTargetsPanel.jsx';
@@ -11,8 +11,9 @@ import { mockLocations, mockActiveAlert } from '../mockData.js';
  * MapRadar Component (Role 3 - GIS Radar)
  * Project Drishti - Tactical Command Center Map
  * 
- * Interactive Mapbox GL JS map visualizing predicted cashout locations,
+ * Interactive MapLibre GL JS + OpenFreeMap map visualizing predicted cashout locations,
  * Uber H3 danger hexes, tactical pulsating markers, and flyTo camera zooms.
+ * Completely free, keyless, and open-source.
  */
 const MapRadar = ({
   locations = mockLocations,
@@ -21,7 +22,6 @@ const MapRadar = ({
   onSelectLocation = () => {},
   centerCoordinates = [77.2090, 28.6139], // Default: New Delhi, India
   zoom = 12.5,
-  mapboxToken = import.meta.env?.VITE_MAPBOX_TOKEN || '',
   showTargetsPanel = true,
   showLegend = true
 }) => {
@@ -31,7 +31,6 @@ const MapRadar = ({
   const popupsRef = useRef(new Map());
 
   const [activeSelectedId, setActiveSelectedId] = useState(selectedLocationId || (locations[0]?.id ?? null));
-  const [tokenMissing, setTokenMissing] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // Sync external selectedLocationId prop and trigger flyTo when selection changes
@@ -80,25 +79,15 @@ const MapRadar = ({
     }
   }, [onSelectLocation]);
 
-  // Initialize Mapbox Instance
+  // Initialize MapLibre Instance with OpenFreeMap Basemap
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    const token = mapboxToken || (typeof window !== 'undefined' ? window.VITE_MAPBOX_TOKEN : '');
-
-    if (!token) {
-      console.warn('[MapRadar] Mapbox token is missing. Please configure VITE_MAPBOX_TOKEN in your .env file.');
-      setTokenMissing(true);
-    } else {
-      mapboxgl.accessToken = token;
-      setTokenMissing(false);
-    }
-
     let map = null;
     try {
-      map = new mapboxgl.Map({
+      map = new maplibregl.Map({
         container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
+        style: 'https://tiles.openfreemap.org/styles/liberty',
         center: centerCoordinates,
         zoom: zoom,
         pitch: 45,
@@ -107,9 +96,9 @@ const MapRadar = ({
       });
 
       // Add zoom and rotation navigation controls
-      map.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), 'top-right');
-      map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
-      map.addControl(new mapboxgl.ScaleControl({ unit: 'metric' }), 'bottom-right');
+      map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+      map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+      map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
 
       map.on('load', () => {
         setIsMapLoaded(true);
@@ -117,7 +106,7 @@ const MapRadar = ({
 
       mapInstanceRef.current = map;
     } catch (err) {
-      console.error('[MapRadar] Error initializing Mapbox GL map:', err);
+      console.error('[MapRadar] Error initializing MapLibre GL map:', err);
     }
 
     return () => {
@@ -131,7 +120,7 @@ const MapRadar = ({
       }
       mapInstanceRef.current = null;
     };
-  }, [mapboxToken]);
+  }, []);
 
   // Render Markers and H3 Hex Layers when data or map loads
   useEffect(() => {
@@ -159,8 +148,8 @@ const MapRadar = ({
       const scorePercent = Math.round((loc.riskScore || loc.score || 0.8) * 100);
       const typeLabel = loc.type || 'ATM';
 
-      // Popup formatted as required in Step 5:
-      // Location name, Location type, Risk score, Rank
+      // Popup formatted as required:
+      // Location name, Location type, Risk score, Rank, Expected window
       const popupHtml = `
         <div class="p-3 bg-slate-950 text-slate-100 rounded-lg border border-cyan-500/40 shadow-2xl font-sans text-xs min-w-[200px]">
           <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-800">
@@ -183,10 +172,16 @@ const MapRadar = ({
               <span class="text-cyan-300">~${loc.travelTime}</span>
             </div>
           ` : ''}
+          ${loc.expectedWindow ? `
+            <div class="mt-1 flex items-center justify-between font-mono text-[11px]">
+              <span class="text-slate-400">Window:</span>
+              <span class="text-amber-300">${loc.expectedWindow}</span>
+            </div>
+          ` : ''}
         </div>
       `;
 
-      const popup = new mapboxgl.Popup({
+      const popup = new maplibregl.Popup({
         offset: 28,
         closeButton: true,
         closeOnClick: false,
@@ -199,7 +194,7 @@ const MapRadar = ({
         flyToTarget(loc);
       });
 
-      const marker = new mapboxgl.Marker({
+      const marker = new maplibregl.Marker({
         element: markerEl,
         anchor: 'bottom'
       })
@@ -237,25 +232,10 @@ const MapRadar = ({
             GIS SPATIO-TEMPORAL RADAR
           </span>
           <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40 font-semibold">
-            LIVE MONITORING
+            OPENFREEMAP LIBERTY
           </span>
         </div>
       </div>
-
-      {/* Missing Token Banner Overlay */}
-      {tokenMissing && (
-        <div className="absolute top-14 left-3 right-3 sm:right-auto sm:max-w-md z-20 bg-amber-950/95 border border-amber-500/60 rounded-xl p-3 backdrop-blur-md text-amber-200 text-xs shadow-2xl">
-          <div className="flex items-start gap-2.5">
-            <span className="text-base">⚠️</span>
-            <div>
-              <p className="font-bold font-mono text-amber-300">Mapbox Token Not Detected</p>
-              <p className="text-[11px] text-amber-200/90 mt-0.5">
-                Add <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-300">VITE_MAPBOX_TOKEN</code> to your <code className="bg-slate-900 px-1 py-0.5 rounded text-amber-300">.env</code> file for full high-resolution map tiles.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Floating Top Predicted Targets Panel (Left / Center) */}
       {showTargetsPanel && locations && locations.length > 0 && (
@@ -275,10 +255,11 @@ const MapRadar = ({
         </div>
       )}
 
-      {/* Mapbox Canvas Container */}
+      {/* MapLibre Canvas Container */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[600px] flex-1" />
     </div>
   );
 };
 
 export default MapRadar;
+

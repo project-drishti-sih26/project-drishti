@@ -13,7 +13,7 @@ import { normalizeAlertData } from '../utils/dataNormalizer.js';
  * 
  * Assembles the full investigator GIS command center interface:
  * - Active Incident Alert HUD Banner
- * - Interactive Mapbox GL JS Spatial Radar
+ * - Interactive MapLibre GL JS + OpenFreeMap Spatial Radar
  * - Uber H3 Hexagonal Risk Zones (CRITICAL, HIGH, MEDIUM, LOW)
  * - Top Predicted Cashout Locations Panel (#1-#5)
  * - Detailed Prediction & ML Explainability Panel ("Why this location?")
@@ -22,7 +22,6 @@ import { normalizeAlertData } from '../utils/dataNormalizer.js';
  */
 export const GisDashboard = ({
   initialAlert = mockActiveAlert,
-  mapboxToken = import.meta.env?.VITE_MAPBOX_TOKEN || '',
   onTargetSelect = () => {}
 }) => {
   // Normalize initial alert or fallback
@@ -144,14 +143,13 @@ export const GisDashboard = ({
           />
         </div>
 
-        {/* Right / Center Column: Mapbox GL JS Canvas & GIS Radar (lg: 8 cols) */}
+        {/* Right / Center Column: MapLibre GL JS Canvas & GIS Radar (lg: 8 cols) */}
         <div className="lg:col-span-8 flex flex-col min-h-[500px] lg:min-h-[620px] relative order-1 lg:order-2">
           <MapRadar
             locations={currentAlert?.targets || mockLocations}
             riskCells={currentAlert?.riskCells}
             selectedLocationId={selectedTargetId}
             onSelectLocation={handleSelectTarget}
-            mapboxToken={mapboxToken}
             showTargetsPanel={false} // Shown in the structured sidebar
             showLegend={true}
           />

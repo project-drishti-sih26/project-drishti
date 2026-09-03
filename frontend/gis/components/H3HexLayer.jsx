@@ -138,10 +138,10 @@ export const buildH3GeoJson = (items = []) => {
 };
 
 /**
- * Safely adds or updates H3 Risk Hexagon layers on a Mapbox GL map instance.
+ * Safely adds or updates H3 Risk Hexagon layers on a MapLibre GL map instance.
  * Avoids duplicate source/layer errors by dynamically updating existing GeoJSON sources.
  * 
- * @param {mapboxgl.Map} map - Mapbox GL instance
+ * @param {maplibregl.Map} map - MapLibre GL instance
  * @param {Array<Object>} riskItems - Array of risk cell objects or locations
  */
 export const addH3HexLayers = (map, riskItems = []) => {
@@ -197,7 +197,7 @@ export const addH3HexLayers = (map, riskItems = []) => {
 
 /**
  * Cleans up H3 GeoJSON layers and source when the map is unmounted or reset.
- * @param {mapboxgl.Map} map - Mapbox GL instance
+ * @param {maplibregl.Map} map - MapLibre GL instance
  */
 export const removeH3HexLayers = (map) => {
   if (!map) return;
