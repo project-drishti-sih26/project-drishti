@@ -57,8 +57,8 @@ export const normalizeTargetLocation = (rawLoc = {}, fallbackRank = 1) => {
   const rank = Number(rawLoc.rank ?? fallbackRank);
 
   return {
-    id: String(rawLoc.id ?? rawLoc.target_id ?? rawLoc.code ?? `target-${rank}`),
-    name: String(rawLoc.name ?? rawLoc.target_name ?? `${type} Target #${rank}`),
+    id: String(rawLoc.location_id ?? rawLoc.id ?? rawLoc.target_id ?? rawLoc.code ?? `target-${rank}`),
+    name: String(rawLoc.bank_name ? `${rawLoc.bank_name} ATM` : (rawLoc.name ?? rawLoc.target_name ?? `${type} Target #${rank}`)),
     type: type,
     latitude: hasValidCoords ? latitude : null,
     longitude: hasValidCoords ? longitude : null,
@@ -93,8 +93,9 @@ export const normalizeAlertData = (rawAlert = {}) => {
 
   const alertId = String(rawAlert.alert_id ?? rawAlert.id ?? rawAlert.case_id ?? `ALT-${Date.now().toString().slice(-4)}`);
   
-  // Normalize targets array
-  const rawTargets = Array.isArray(rawAlert.targets) ? rawAlert.targets : 
+  // Normalize targets array (supports backend `top_5_atms` as well as mock `targets`)
+  const rawTargets = Array.isArray(rawAlert.top_5_atms) ? rawAlert.top_5_atms :
+                     Array.isArray(rawAlert.targets) ? rawAlert.targets : 
                      Array.isArray(rawAlert.predicted_locations) ? rawAlert.predicted_locations : 
                      Array.isArray(rawAlert.locations) ? rawAlert.locations : [];
 
@@ -129,7 +130,11 @@ export const normalizeAlertData = (rawAlert = {}) => {
 
   // Withdrawal time window formatting
   let withdrawalWindow = '20–45 mins';
-  if (typeof rawAlert.withdrawal_window === 'object' && rawAlert.withdrawal_window !== null) {
+  if (typeof rawAlert.time_window === 'object' && rawAlert.time_window !== null) {
+    const mins = rawAlert.time_window.minutes_from_now ?? 25;
+    const endTime = rawAlert.time_window.end ? (rawAlert.time_window.end.includes('T') ? rawAlert.time_window.end.split('T')[1].slice(0, 5) : rawAlert.time_window.end) : null;
+    withdrawalWindow = endTime ? `${mins} mins (until ${endTime})` : `${mins} mins`;
+  } else if (typeof rawAlert.withdrawal_window === 'object' && rawAlert.withdrawal_window !== null) {
     const min = rawAlert.withdrawal_window.min ?? rawAlert.withdrawal_window.minimum ?? 15;
     const max = rawAlert.withdrawal_window.max ?? rawAlert.withdrawal_window.maximum ?? 45;
     withdrawalWindow = `${min}–${max} mins`;
@@ -156,9 +161,9 @@ export const normalizeAlertData = (rawAlert = {}) => {
   return {
     alertId,
     caseId: rawAlert.case_id || rawAlert.caseId || 'CASE-ACTIVE',
-    muleAccount: rawAlert.mule_account || rawAlert.muleAccount || 'XXXX-XXXX-8821',
-    defraudedAmount: rawAlert.defrauded_amount || rawAlert.amount || '₹ 1,50,000',
-    incidentTimestamp: rawAlert.incident_timestamp || rawAlert.timestamp || new Date().toISOString(),
+    muleAccount: rawAlert.mule_account_id || rawAlert.mule_account || rawAlert.muleAccount || 'XXXX-XXXX-8821',
+    defraudedAmount: rawAlert.compromised_amount ? `₹ ${Number(rawAlert.compromised_amount).toLocaleString('en-IN')}` : (rawAlert.defrauded_amount || rawAlert.amount || '₹ 1,50,000'),
+    incidentTimestamp: rawAlert.detected_at || rawAlert.incident_timestamp || rawAlert.timestamp || new Date().toISOString(),
     riskScore: Number(rawAlert.risk_score ?? rawAlert.riskScore ?? 0.92),
     withdrawalWindow,
     targets,
