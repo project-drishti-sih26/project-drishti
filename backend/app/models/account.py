@@ -70,3 +70,21 @@ ROLE: Role 1 — Backend Engineer
     - app.db.base (Base)
     - enum (standard library)
 """
+
+from sqlalchemy import Column, String, Float, Enum as SQLAlchemyEnum
+from app.db.base import Base
+import enum
+
+class AccountType(str, enum.Enum):
+    STANDARD = "Standard"
+    MULE = "Mule"
+
+class Account(Base):
+    __tablename__ = 'accounts'
+    account_id = Column(String, primary_key=True, index=True)
+    bank_name = Column(String, nullable=True)
+    account_type = Column(SQLAlchemyEnum(AccountType), nullable=False, default=AccountType.STANDARD)
+    risk_score = Column(Float, default=0.0)
+    owner_name = Column(String, nullable=True)
+    last_known_latitude = Column(Float, nullable=True)
+    last_known_longitude = Column(Float, nullable=True)

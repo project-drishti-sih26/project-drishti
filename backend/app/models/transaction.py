@@ -65,3 +65,17 @@ ROLE: Role 1 — Backend Engineer
     - datetime (datetime) for the default timestamp value
     - app.db.base (Base)
 """
+
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey
+from app.db.base import Base
+from datetime import datetime
+
+class Transaction(Base):
+    __tablename__ = 'transactions'
+    tx_id = Column(String, primary_key=True, index=True)
+    sender_id = Column(String, ForeignKey('accounts.account_id'), nullable=False, index=True)
+    receiver_id = Column(String, ForeignKey('accounts.account_id'), nullable=False, index=True)
+    amount = Column(Float, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    case_id = Column(String, ForeignKey('cases.case_id'), nullable=True)
+    transaction_type = Column(String, default="TRANSFER")

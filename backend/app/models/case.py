@@ -78,3 +78,17 @@ ROLE: Role 1 — Backend Engineer
     - datetime (datetime)
     - app.db.base (Base)
 """
+
+from sqlalchemy import Column, String, Float, DateTime, ForeignKey, Text
+from app.db.base import Base
+from datetime import datetime
+
+class Case(Base):
+    __tablename__ = 'cases'
+    case_id = Column(String, primary_key=True, index=True)
+    victim_account_id = Column(String, ForeignKey('accounts.account_id'), nullable=False)
+    flagged_mule_id = Column(String, ForeignKey('accounts.account_id'), nullable=True)
+    compromised_amount = Column(Float, nullable=False)
+    status = Column(String, default="ACTIVE")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    prediction_payload = Column(Text, nullable=True)

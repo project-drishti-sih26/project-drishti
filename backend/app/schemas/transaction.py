@@ -67,3 +67,18 @@ ROLE: Role 1 — Backend Engineer
     - typing (Optional, List)
     - datetime (datetime)
 """
+
+from pydantic import BaseModel, validator
+from typing import Optional, List
+from datetime import datetime
+
+class TransactionCreate(BaseModel):
+    tx_id: str
+    sender_id: str
+    receiver_id: str
+    amount: float
+    timestamp: Optional[datetime] = None
+
+class TransactionResponse(BaseModel):
+    status: str
+    alert_triggered: bool

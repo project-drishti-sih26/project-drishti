@@ -51,3 +51,10 @@ ROLE: Role 1 — Backend Engineer
     - CaseStatusUpdate is the input to PATCH /cases/{case_id}/status.
     - The `status` updates written here become the ML retraining data later.
 """
+
+from pydantic import BaseModel
+
+class CaseResponse(BaseModel):
+    case_id: str
+    status: str
+    description: str
