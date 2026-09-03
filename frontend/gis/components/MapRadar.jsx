@@ -33,17 +33,6 @@ const MapRadar = ({
   const [activeSelectedId, setActiveSelectedId] = useState(selectedLocationId || (locations[0]?.id ?? null));
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  // Sync external selectedLocationId prop and trigger flyTo when selection changes
-  useEffect(() => {
-    if (selectedLocationId && selectedLocationId !== activeSelectedId) {
-      setActiveSelectedId(selectedLocationId);
-      const target = locations?.find((l) => l.id === selectedLocationId);
-      if (target && isMapLoaded) {
-        flyToTarget(target);
-      }
-    }
-  }, [selectedLocationId, locations, activeSelectedId, isMapLoaded, flyToTarget]);
-
   // Handle target flyTo navigation
   const flyToTarget = useCallback((target) => {
     if (!target) return;
@@ -78,6 +67,17 @@ const MapRadar = ({
       }
     }
   }, [onSelectLocation]);
+
+  // Sync external selectedLocationId prop and trigger flyTo when selection changes
+  useEffect(() => {
+    if (selectedLocationId && selectedLocationId !== activeSelectedId) {
+      setActiveSelectedId(selectedLocationId);
+      const target = locations?.find((l) => l.id === selectedLocationId);
+      if (target && isMapLoaded) {
+        flyToTarget(target);
+      }
+    }
+  }, [selectedLocationId, locations, activeSelectedId, isMapLoaded, flyToTarget]);
 
   // Initialize MapLibre Instance with OpenFreeMap Basemap
   useEffect(() => {

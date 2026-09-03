@@ -188,7 +188,7 @@ def prepare_ltr_training_data(
     for tx_id, group in grouped:
         row = group.iloc[0]
         actual_atm = row["withdrawal_atm_id"]
-        mule_id = row["mule_account_id"]
+        mule_id = str(row.get("receiver_id") or row.get("mule_account_id") or "ACC_MULE")
         tx_ts = str(row.get("transfer_timestamp", "2026-01-01T12:00:00"))
 
         # All ATMs in the same city = candidates for this event

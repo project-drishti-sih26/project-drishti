@@ -50,13 +50,9 @@ export const getH3BoundaryCoordinates = (h3Index, fallbackLat, fallbackLng) => {
     let boundary = null;
 
     // Support h3-js v4 API (cellToBoundary)
-    if (typeof h3.cellToBoundary === 'function' && h3Index) {
-      // formatAsGeoJson = true returns [[lng, lat], ...]
-      boundary = h3.cellToBoundary(h3Index, true);
-    }
-    // Support h3-js v3 API (h3ToGeoBoundary)
-    else if (typeof h3.h3ToGeoBoundary === 'function' && h3Index) {
-      boundary = h3.h3ToGeoBoundary(h3Index, true);
+    const getBoundary = h3.cellToBoundary || h3["h3ToGeoBoundary"];
+    if (typeof getBoundary === 'function' && h3Index) {
+      boundary = getBoundary(h3Index, true);
     }
 
     if (Array.isArray(boundary) && boundary.length >= 3) {

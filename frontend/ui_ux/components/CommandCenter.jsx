@@ -16,8 +16,8 @@ const CommandCenter = () => {
   const [selectedAtmId, setSelectedAtmId] = useState('ATM-091');
   const [secondsRemaining, setSecondsRemaining] = useState(656); // 10m 56s
 
-  // Bureaucratic Active Case
-  const activeCase = {
+  // Dynamic Active Case State
+  const [activeCase, setActiveCase] = useState({
     case_id: 'NCR-2026-00491',
     victim_name: 'R. K. Sharma',
     victim_account: 'SBIN •••• 9284',
@@ -30,7 +30,7 @@ const CommandCenter = () => {
     crime_vector: 'Unauthorized APK Screen Share',
     predicted_atm: 'SBI Kiosk #091, Inner Circle Block-B, CP',
     assigned_patrol: 'PCR Unit 12 (Central Division)'
-  };
+  });
 
   const [atms, setAtms] = useState([
     {
@@ -99,6 +99,91 @@ const CommandCenter = () => {
       yPercent: 24
     }
   ]);
+
+  // Live WebSocket Connection to Project Drishti Alert Stream
+  useEffect(() => {
+    let ws = null;
+    let reconnectTimer = null;
+    let isMounted = true;
+
+    const connectWebSocket = () => {
+      try {
+        const wsUrl = import.meta.env?.VITE_WS_URL || 'ws://localhost:8000/ws/live_alerts';
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          if (isMounted) console.log(`[Drishti CommandCenter] Connected to live WebSocket: ${wsUrl}`);
+        };
+
+        ws.onmessage = (event) => {
+          if (!isMounted) return;
+          try {
+            const liveData = JSON.parse(event.data);
+            console.log('[Drishti CommandCenter] Received live alert from ML Engine:', liveData);
+
+            if (liveData.top_5_atms && liveData.top_5_atms.length > 0) {
+              // 1. Update Top-5 ATMs in the Sidebar and Map
+              const mappedAtms = liveData.top_5_atms.map((a, idx) => ({
+                id: a.location_id || `ATM-${idx + 1}`,
+                rank: a.rank || idx + 1,
+                name: a.bank_name || 'Bank ATM',
+                location: a.address || 'Address unavailable',
+                distance: `${a.distance_km} km`,
+                eta: `${Math.round(a.travel_time_mins)} min`,
+                probability: `${Math.round((a.confidence_score || 0.85) * 100)}%`,
+                cctv_status: 'Active (3 Cameras)',
+                notes: a.explanation || 'Predicted high-probability withdrawal target',
+                latitude: a.latitude,
+                longitude: a.longitude,
+                xPercent: 30 + (idx * 11),
+                yPercent: 40 + ((idx % 3) * 14),
+              }));
+              setAtms(mappedAtms);
+              setSelectedAtmId(mappedAtms[0].id);
+
+              // 2. Update Countdown Timer from Survival Analysis prediction
+              if (liveData.time_window && liveData.time_window.minutes_from_now) {
+                setSecondsRemaining(liveData.time_window.minutes_from_now * 60);
+              }
+
+              // 3. Update the Active Incident Case Details
+              setActiveCase({
+                case_id: liveData.case_id || 'NCR-2026-LIVE',
+                victim_name: 'Reported Victim',
+                victim_account: liveData.victim_account_id || 'ACC •••• 9284',
+                victim_bank: 'Interbank Transfer (IMPS/UPI)',
+                mule_account: liveData.mule_account_id || 'MULE •••• X99',
+                mule_name: 'Suspect Mule Runner',
+                mule_bank: 'Target Beneficiary Account',
+                compromised_amount: liveData.compromised_amount || 150000,
+                debit_time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST',
+                crime_vector: 'High-Velocity Multi-Hop Cyber Fraud',
+                predicted_atm: `${mappedAtms[0].name}, ${mappedAtms[0].location}`,
+                assigned_patrol: 'PCR Unit 12 (Central Division)'
+              });
+            }
+          } catch (e) {
+            console.error('[Drishti CommandCenter] Failed to parse alert message:', e);
+          }
+        };
+
+        ws.onclose = () => {
+          if (!isMounted) return;
+          reconnectTimer = setTimeout(connectWebSocket, 4000);
+        };
+      } catch (err) {
+        console.warn('[Drishti CommandCenter] WebSocket connection error:', err);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      isMounted = false;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (ws) ws.close();
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {

@@ -19,6 +19,11 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
+    # Ensure all ORM models are registered with Base before creating tables
+    from app.models.account import Account
+    from app.models.transaction import Transaction
+    from app.models.case import Case
+    from app.models.location import PhysicalLocation
     Base.metadata.create_all(bind=engine)
 
 @app.post("/api/v1/login", response_model=Token)
