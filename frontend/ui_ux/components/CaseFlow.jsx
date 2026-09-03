@@ -1,60 +1,40 @@
 import React from 'react';
-import { ArrowRight, UserCheck, ShieldOff, Building2, Banknote } from 'lucide-react';
 
 /**
  * CaseFlow Component (Role 4 - UI/UX)
- * Visual money trail showing Victim Account -> Compromised Amount -> Mule Cascade -> Predicted ATM.
+ * Transaction Trail: 01. Victim Account -> 02. Mule Account (Hop 1) -> 03. Predicted Withdrawal Location
  */
 const CaseFlow = ({
-  victim = 'VICTIM-AC-1029',
-  mule = 'MULE-AC-9941',
-  amount = 75000,
-  predictedAtm = 'SBI ATM #092 (Connaught Place)'
+  victim = 'SBIN •••• 9284',
+  victimName = 'R. K. Sharma',
+  victimBank = 'State Bank of India (Connaught Place Branch)',
+  mule = 'HDFC •••• 9201',
+  muleName = 'Imran Ansari',
+  muleBank = 'HDFC Bank (Noida Sector 18 Branch)',
+  predictedAtm = 'SBI Kiosk #091, Inner Circle Block-B, CP',
+  assignedPatrol = 'PCR Unit 12 (Central Division)'
 }) => {
   return (
-    <div className="bg-slate-900/80 border border-cyan-500/20 rounded-xl p-4 shadow-lg backdrop-blur">
-      <h3 className="text-xs font-mono text-cyan-400 font-semibold tracking-wider uppercase mb-3 flex items-center gap-2">
-        <Banknote className="w-4 h-4 text-cyan-400" />
-        Transaction Velocity & Money Trail
-      </h3>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+      <div className="bg-slate-50 border border-slate-200 rounded-sm p-3">
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">01. Victim Account</span>
+        <div className="font-semibold text-slate-900 text-xs mt-1">{victimName}</div>
+        <div className="font-mono text-xs text-slate-600 mt-0.5">{victim}</div>
+        <div className="text-[11px] text-slate-500 mt-1">{victimBank}</div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-center text-xs font-mono">
-        {/* Node 1: Victim */}
-        <div className="bg-slate-950/80 border border-slate-800 p-2.5 rounded-lg">
-          <div className="flex items-center gap-1.5 text-slate-400 text-[10px] mb-1">
-            <UserCheck className="w-3 h-3 text-emerald-400" />
-            <span>ORIGIN VICTIM</span>
-          </div>
-          <div className="font-semibold text-slate-200 truncate">{victim}</div>
-          <div className="text-[10px] text-emerald-400 font-bold mt-1">-₹{amount.toLocaleString('en-IN')}</div>
-        </div>
+      <div className="bg-rose-50/60 border border-rose-200 rounded-sm p-3">
+        <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider block">02. Mule Account (Hop 1)</span>
+        <div className="font-semibold text-rose-950 text-xs mt-1">{muleName}</div>
+        <div className="font-mono text-xs text-rose-800 font-bold mt-0.5">{mule}</div>
+        <div className="text-[11px] text-rose-700 mt-1">{muleBank}</div>
+      </div>
 
-        {/* Node 2: Cascade */}
-        <div className="bg-slate-950/80 border border-red-900/50 p-2.5 rounded-lg">
-          <div className="flex items-center gap-1.5 text-red-400 text-[10px] mb-1">
-            <ShieldOff className="w-3 h-3 text-red-400" />
-            <span>PRIMARY MULE</span>
-          </div>
-          <div className="font-semibold text-red-300 truncate">{mule}</div>
-          <div className="text-[10px] text-red-400 font-bold mt-1">Status: Flagged Tier-1</div>
-        </div>
-
-        {/* Node 3: Amount In Transit */}
-        <div className="bg-slate-950/80 border border-amber-500/30 p-2.5 rounded-lg">
-          <div className="text-[10px] text-amber-400 mb-1">IN TRANSIT / TIME</div>
-          <div className="text-sm font-bold text-amber-300">₹{amount.toLocaleString('en-IN')}</div>
-          <div className="text-[10px] text-slate-400 mt-1">Velocity: Fast Drain</div>
-        </div>
-
-        {/* Node 4: Target ATM */}
-        <div className="bg-slate-950/80 border border-cyan-500/40 p-2.5 rounded-lg">
-          <div className="flex items-center gap-1.5 text-cyan-400 text-[10px] mb-1">
-            <Building2 className="w-3 h-3 text-cyan-400" />
-            <span>PREDICTED CASHOUT</span>
-          </div>
-          <div className="font-semibold text-cyan-300 truncate">{predictedAtm}</div>
-          <div className="text-[10px] text-cyan-400 font-bold mt-1">Interception Target</div>
-        </div>
+      <div className="bg-slate-100/80 border border-slate-300 rounded-sm p-3">
+        <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">03. Predicted Withdrawal Location</span>
+        <div className="font-semibold text-slate-900 text-xs mt-1">{predictedAtm}</div>
+        <div className="text-xs text-slate-700 font-semibold mt-0.5">ETA: ~11 min (1.8 km)</div>
+        <div className="text-[11px] text-slate-600 mt-1">{assignedPatrol}</div>
       </div>
     </div>
   );

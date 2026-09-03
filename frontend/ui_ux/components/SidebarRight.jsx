@@ -1,138 +1,186 @@
-import React from 'react';
-import { Crosshair, Navigation, HelpCircle, Flame, Clock } from 'lucide-react';
+import React, { useState } from 'react';
 
 /**
  * SidebarRight Component (Role 4 - UI/UX)
- * Renders the ranked Top-5 ATM cashout predictions, countdown window, and SHAP explainability cards.
+ * Right Panel:
+ * - Estimated Withdrawal Timeframe countdown
+ * - ATM Locations (Ranked by Proximity)
+ * - Case Actions (Text-only clean buttons)
  */
 const SidebarRight = ({
+  countdown = '10:56',
+  onFeedback = () => {},
+  selectedAtmId = 'ATM-091',
+  onSelectAtm = () => {},
   predictedAtms = [
     {
       id: 'ATM-091',
-      name: 'SBI ATM, Block B, Connaught Place',
       rank: 1,
-      score: 0.94,
-      travel_time: '18 mins',
-      distance_km: 2.3,
-      shap_reasons: 'High historical mule cashouts + 2.3km proximity to last known IP'
+      name: 'SBI Kiosk #091',
+      location: 'Block B, Inner Circle, Connaught Place',
+      distance: '1.8 km',
+      eta: '11 min',
+      probability: '89%',
+      cctv_status: 'Active (3 Cameras)',
+      notes: 'Identified recurring withdrawal node for reported beneficiary syndicate.'
     },
     {
       id: 'ATM-142',
-      name: 'HDFC ATM, Barakhamba Road',
       rank: 2,
-      score: 0.81,
-      travel_time: '24 mins',
-      distance_km: 3.1,
-      shap_reasons: 'Frequent evening cashout cluster + Low surveillance density'
+      name: 'HDFC ATM',
+      location: 'Statesman House, Barakhamba Road',
+      distance: '2.4 km',
+      eta: '17 min',
+      probability: '82%',
+      cctv_status: 'Active (Bank Guard)',
+      notes: 'Located on transit corridor towards New Delhi Railway Station.'
     },
     {
       id: 'ATM-033',
-      name: 'ICICI Bank BC Point, Janpath',
       rank: 3,
-      score: 0.74,
-      travel_time: '29 mins',
-      distance_km: 3.9,
-      shap_reasons: 'Correlated secondary withdrawal point'
+      name: 'ICICI Bank ATM',
+      location: 'Janpath Market Lane',
+      distance: '3.1 km',
+      eta: '22 min',
+      probability: '76%',
+      cctv_status: 'Active (Market Feed)',
+      notes: 'Pedestrian market access point.'
+    },
+    {
+      id: 'ATM-089',
+      rank: 4,
+      name: 'PNB ATM',
+      location: 'Antriksh Bhawan, Kasturba Gandhi Marg',
+      distance: '3.8 km',
+      eta: '29 min',
+      probability: '68%',
+      cctv_status: 'Active (Building Security)',
+      notes: 'Verified unoccupied during last patrol check at 22:30 IST.'
+    },
+    {
+      id: 'ATM-052',
+      rank: 5,
+      name: 'Axis Bank ATM',
+      location: 'Outer Circle, Near Shankar Market',
+      distance: '4.2 km',
+      eta: '34 min',
+      probability: '59%',
+      cctv_status: 'Maintenance Offline',
+      notes: 'Secondary node based on cell tower perimeter coverage.'
     }
-  ],
-  selectedAtmId = null,
-  onSelectAtm = () => {},
-  countdown = '22:15'
+  ]
 }) => {
+  const [expandedAtmId, setExpandedAtmId] = useState('ATM-091');
+  const [isMuleFrozen, setIsMuleFrozen] = useState(false);
+
+  const toggleExpand = (atm) => {
+    setExpandedAtmId(expandedAtmId === atm.id ? null : atm.id);
+    onSelectAtm(atm);
+  };
+
+  const handleFreeze = () => {
+    setIsMuleFrozen(true);
+    onFeedback('freeze_mule');
+  };
+
   return (
-    <aside className="w-88 h-full flex flex-col gap-4 p-4 bg-slate-950/90 border-l border-slate-800/80 overflow-y-auto">
-      {/* Time Window Countdown Card */}
-      <div className="bg-gradient-to-br from-red-950/60 to-slate-900 border border-red-500/40 rounded-xl p-4 shadow-lg">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-mono font-bold tracking-wider text-red-400 flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-red-400 animate-spin" />
-            INTERCEPTION WINDOW
-          </span>
-          <span className="text-[10px] font-mono bg-red-900/60 text-red-300 px-2 py-0.5 rounded border border-red-500/40">
-            KAPLAN-MEIER
-          </span>
+    <aside className="w-full flex flex-col gap-5">
+      {/* 1. TIMEFRAME COUNTDOWN */}
+      <div className="bg-white rounded-sm border border-slate-200 p-4 text-center">
+        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+          Estimated Withdrawal Timeframe
+        </span>
+        <div className="mt-1.5 text-3xl font-bold font-mono text-rose-700">
+          {countdown}
         </div>
-        <div className="mt-2 text-center">
-          <span className="font-mono text-3xl font-black text-amber-400 tracking-wider">
-            {countdown}
-          </span>
-          <p className="text-[11px] text-slate-400 mt-1">
-            Estimated withdrawal in <strong className="text-white">18–35 mins</strong>
-          </p>
+        <p className="text-xs text-slate-500 mt-1">
+          Proximity estimate based on last cell-tower registration.
+        </p>
+      </div>
+
+      {/* 2. ATM LOCATIONS */}
+      <div className="bg-white rounded-sm border border-slate-200 p-3.5 space-y-2.5">
+        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">
+            ATM Locations
+          </h3>
+          <span className="text-[11px] text-slate-400">Ranked by Proximity</span>
+        </div>
+
+        <div className="space-y-2">
+          {predictedAtms.map((atm) => {
+            const isExpanded = expandedAtmId === atm.id;
+            const isSelected = selectedAtmId === atm.id;
+
+            return (
+              <div
+                key={atm.id}
+                onClick={() => toggleExpand(atm)}
+                className={`p-2.5 rounded-sm border transition-colors cursor-pointer ${
+                  isSelected
+                    ? 'border-slate-400 bg-slate-100/70 border-l-4 border-l-slate-900'
+                    : 'border-slate-200 hover:bg-slate-50 border-l-4 border-l-transparent'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-4 h-4 rounded-sm flex items-center justify-center font-bold text-[10px] ${
+                      atm.rank === 1 ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-slate-100 text-slate-700 border border-slate-200'
+                    }`}>
+                      {atm.rank}
+                    </span>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">{atm.name}</div>
+                      <div className="text-[11px] text-slate-500 truncate max-w-[140px]">{atm.location}</div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-slate-900 block font-mono">{atm.probability}</span>
+                    <span className="text-[10px] text-slate-500">{atm.distance} ({atm.eta})</span>
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-600 space-y-1">
+                    <div><strong className="text-slate-800">Case Note:</strong> {atm.notes}</div>
+                    <div className="text-[11px] text-slate-500">CCTV: {atm.cctv_status}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Top-5 Predictions List Header */}
-      <div className="flex items-center justify-between px-1">
-        <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
-          <Crosshair className="w-4 h-4 text-cyan-400" />
-          RANKED CASHOUT ATMS (LTR)
-        </h2>
-        <span className="text-[10px] text-slate-400 font-mono">TOP 5</span>
-      </div>
+      {/* 3. CASE ACTIONS (TEXT-ONLY) */}
+      <div className="bg-white rounded-sm border border-slate-200 p-3.5 space-y-2.5">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block pb-1 border-b border-slate-100">
+          Case Actions
+        </span>
 
-      {/* Ranked Cards */}
-      <div className="space-y-3">
-        {predictedAtms.map((atm) => {
-          const isRankOne = atm.rank === 1;
-          const isSelected = selectedAtmId === atm.id;
+        <div className="space-y-2 pt-1">
+          {/* Primary Action */}
+          <button
+            onClick={handleFreeze}
+            disabled={isMuleFrozen}
+            className={`w-full py-2 px-3 font-semibold text-xs rounded-sm transition-colors cursor-pointer ${
+              isMuleFrozen
+                ? 'bg-slate-100 text-slate-400 border border-slate-200'
+                : 'bg-rose-700 hover:bg-rose-800 text-white'
+            }`}
+          >
+            {isMuleFrozen ? 'Debit Restriction Requested' : 'Freeze Mule Account'}
+          </button>
 
-          return (
-            <div
-              key={atm.id}
-              onClick={() => onSelectAtm(atm)}
-              className={`p-3 rounded-xl border transition-all cursor-pointer select-none ${
-                isSelected
-                  ? 'bg-slate-800/90 border-cyan-400 ring-1 ring-cyan-400/50'
-                  : isRankOne
-                  ? 'bg-red-950/30 hover:bg-red-950/50 border-red-500/40'
-                  : 'bg-slate-900/80 hover:bg-slate-800/80 border-slate-800'
-              }`}
-            >
-              {/* Card Header: Rank + Confidence */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`w-6 h-6 flex items-center justify-center rounded-md font-mono text-xs font-bold ${
-                      isRankOne
-                        ? 'bg-red-600 text-white shadow-md shadow-red-500/50'
-                        : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                    }`}
-                  >
-                    #{atm.rank}
-                  </span>
-                  <span className="text-xs font-semibold text-slate-200">
-                    {atm.name}
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-emerald-400">
-                  {((atm.score || 0.8) * 100).toFixed(0)}%
-                </span>
-              </div>
-
-              {/* Distance & Travel Time */}
-              <div className="flex items-center gap-3 mt-2 text-[11px] font-mono text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Navigation className="w-3 h-3 text-cyan-400" />
-                  {atm.distance_km} km
-                </span>
-                <span>•</span>
-                <span>ETA ~{atm.travel_time}</span>
-              </div>
-
-              {/* SHAP Explainability Badge */}
-              <div className="mt-2.5 p-2 rounded bg-slate-950/80 border border-slate-800 text-[11px] text-slate-300">
-                <div className="flex items-center gap-1 text-amber-400 text-[10px] font-mono font-semibold mb-1">
-                  <Flame className="w-3 h-3" />
-                  <span>SHAP AI REASONING:</span>
-                </div>
-                <p className="leading-snug text-slate-400">
-                  {atm.shap_reasons || 'Top spatial candidate based on network movement.'}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+          {/* Secondary Action */}
+          <button
+            onClick={() => onFeedback('intercepted')}
+            className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-sm transition-colors cursor-pointer"
+          >
+            Mark Case Resolved
+          </button>
+        </div>
       </div>
     </aside>
   );

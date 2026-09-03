@@ -1,9 +1,14 @@
 # 💻 Role 4: Frontend Engineer (UI/UX & Dashboard)
 
 ## 📌 Role Ownership & Mission
-* **Role:** Frontend Engineer (Command Center UI, UX & Interactive Dashboards)
-* **Goal:** Build the command center layout and user experience for law enforcement operators. Turn complex multi-hop financial cascades and machine learning predictions into rapid, high-contrast, actionable intelligence.
-* **Tech Stack:** React.js, Tailwind CSS (Command Center Dark Theme), Lucide React, Recharts, Zustand, jspdf (Dispatch PDF generation).
+* **Role:** Frontend Engineer (Modern SaaS Intelligence Dashboard)
+* **Design Philosophy:** Soft, modern SaaS consumer-product aesthetic (inspired by Linear, Stripe Dashboard, Skymetrics). Prioritizes visual polish, approachable ergonomics, clean cards, and generous whitespace.
+* **Aesthetic Highlights:**
+  - **Color Palette:** Soft off-white / light grey background (`#f8fafc`), clean white card surfaces (`#ffffff`), and soft pastel accents (`indigo`, `rose`, `emerald`, `amber`).
+  - **Card Geometry & Elevation:** Generous rounded corners (16–20px radius) with subtle, floating drop shadows (`shadow-[0_2px_8px_rgba(0,0,0,0.03)]`).
+  - **Pill Badges:** Rounded chip badges for status, severity, and categories.
+  - **Charts:** Two-tone gradient area line charts ("Cases Over Time") and clean donut charts ("Cases by Category").
+  - **Action Ergonomics:** One solid dark rounded button (primary) and one outlined rounded button (secondary).
 
 ---
 
@@ -11,30 +16,40 @@
 ```
 frontend/ui_ux/
 ├── components/
-│   ├── Header.jsx               # Top navigation bar, I4C branding, live incident ticker & UTC clock
-│   ├── SidebarLeft.jsx          # Active case dossier & live transaction stream
-│   ├── SidebarRight.jsx         # Top-5 predicted ATMs, survival time window, SHAP reasoning cards
-│   ├── Alerts.jsx               # Urgent pulsing alert notification banner
-│   ├── CaseFlow.jsx             # Visual victim -> mule -> cashout money trail graph
-│   ├── PoliceDispatchModal.jsx  # Killer Feature 1: "1-Click Export to Police Dispatch PDF"
-│   └── FeedbackActions.jsx      # Killer Feature 2: Human-in-the-loop operation feedback buttons
-├── index.js                     # Clean component exports
+│   ├── CommandCenter.jsx        # Master SaaS layout with metric cards, 3 columns & charts
+│   ├── Header.jsx               # Top navigation bar, Drishti branding, live status pill & profile
+│   ├── Alerts.jsx               # Soft coral pastel alert banner with pill action button
+│   ├── SidebarLeft.jsx          # Active case dossier & step-by-step money trail
+│   ├── CaseFlow.jsx             # Soft step-by-step account cascade visual (Victim → Mule → ATM)
+│   ├── CenterRadar.jsx          # Soft modern spatial radar & ATM interception map
+│   ├── SidebarRight.jsx         # Large countdown timer, top-5 ranked ATM list & feedback actions
+│   ├── FeedbackActions.jsx      # Modern primary dark + secondary outlined rounded buttons
+│   └── PoliceDispatchModal.jsx  # Printable police dispatch order preview & jsPDF exporter
+├── index.html                   # Standalone interactive live dashboard preview
+├── index.js                     # Component exports
 └── README.md                    # Role 4 specification & guide
 ```
 
 ---
 
-## 🎯 Key Deliverables
-1. **3-Column Tactical Command Center:**
-   - **Left Column:** Live Case Details & Transaction Flow (Victim -> Mule -> Hop accounts).
-   - **Center Column:** Interactive Map Radar (imported from `gis/MapRadar.jsx`).
-   - **Right Column:** Predicted Cashout ATMs ranked #1 to #5 with countdown timer & SHAP factors.
-2. **Visual Money Trail Graph (`CaseFlow.jsx`):**
-   - Renders animated nodes showing account numbers, timestamps, and amounts (`₹75,000`).
-3. **Actionable Top-5 Prediction Cards (`SidebarRight.jsx`):**
-   - Highlighting ATM location name, address, distance, estimated travel time.
-   - Explainable AI (SHAP) badge: e.g. *"Proximity to past cashout (82%) + Active time pattern (18%)"*.
-4. **Killer Feature 1: 1-Click Police Dispatch PDF (`PoliceDispatchModal.jsx`):**
-   - Generates an official field dispatch sheet with suspect account, predicted ATM GPS, time window, and dispatch authorization stamp using `jspdf`.
-5. **Killer Feature 2: Human-in-the-loop Feedback (`FeedbackActions.jsx`):**
-   - One-touch operator buttons: `Confirmed Interception` and `False Alarm` to record ground truth and train the reinforcement loop.
+## 🎯 Key Dashboard Deliverables
+1. **Top Nav Bar (`Header.jsx`):**
+   - Brand logo, navigation items, soft green live status pill badge ("Live Feed Online"), live clock, and profile avatar.
+2. **Top Metric Cards Row (4 Cards):**
+   - Active Cases (`24` `+12.4%`), Total Value at Risk (`₹42.8L` `+8.1%`), Cases Intercepted (`18` `+18.5%`), Avg Response Time (`12.4m` `-14.2% faster`).
+3. **Main Case View & Step-by-Step Flow (`SidebarLeft.jsx` & `CaseFlow.jsx`):**
+   - Selected case summary with siphoned amount, victim identity, and mule profile.
+   - Soft step-by-step cascade flow: `Victim → Flagged Mule → Target ATM`.
+4. **Spatial Radar Map (`CenterRadar.jsx`):**
+   - Soft street network, uncertainty radius circle (1.8 km), patrol unit tracking (`PCR-12`), and colored ATM pins (1–5).
+5. **Predictions Sidebar (`SidebarRight.jsx`):**
+   - Large colorful countdown timer with urgency chip.
+   - Top-5 ranked ATM list with pill badges, confidence %, travel time, and expandable AI reasoning.
+   - Operator decision buttons (`Confirmed Interception` / `False Alarm`).
+6. **Charts Section:**
+   - Soft line chart ("Cases Over Time") with two-tone gradient fill.
+   - Colorful donut chart ("Cases by Category") breaking down fraud vectors.
+7. **Dispatch Export Sheet (`PoliceDispatchModal.jsx`):**
+   - Official court-admissible dispatch sheet with 1-click PDF download via `jsPDF`.
+
+
