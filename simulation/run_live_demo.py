@@ -1,62 +1,42 @@
-import time
 import requests
+import time
+import json
 from datetime import datetime
 
-API_URL = "http://127.0.0.1:8000/api/v1/transactions"
+# The endpoint your backend teammate (Role 1) set up
+API_ENDPOINT = "http://localhost:8000/api/v1/transactions"
 
-def send_transaction(tx_id, sender, receiver, amount):
-    payload = {
-        "tx_id": tx_id,
-        "sender_id": sender,
-        "receiver_id": receiver,
-        "amount": amount,
-        "timestamp": datetime.utcnow().isoformat()
-    }
-    try:
-        response = requests.post(API_URL, json=payload)
-        response.raise_for_status()
-        return response.json()
-    except requests.exceptions.RequestException as e:
-        print(f"[ERROR] Failed to send transaction {tx_id}: {e}")
-        return None
-
-def run_demo():
-    print("="*60)
-    print(">>> DRISHTI LIVE DEMO INITIALIZED <<<")
-    print("="*60)
-    print("[INFO] Simulating standard banking traffic...")
+def trigger_presentation_demo():
+    print("🎬 INITIATING PROJECT DRISHTI LIVE DEMO...")
     time.sleep(1)
-
-    # 1. Normal Transaction
-    print(f"\n[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-101 -> ACC-902 (Rs. 2,500.00)")
-    send_transaction("TXN-001", "ACC-101", "ACC-902", 2500.0)
-    time.sleep(1.0)
-
-    # 2. Normal Transaction
-    print(f"[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-404 -> ACC-511 (Rs. 8,000.00)")
-    send_transaction("TXN-002", "ACC-404", "ACC-511", 8000.0)
-    time.sleep(1.0)
-
-    # 3. Normal Transaction
-    print(f"[INFO] {datetime.now().strftime('%H:%M:%S')} - Routing funds: ACC-777 -> ACC-303 (Rs. 1,200.00)")
-    send_transaction("TXN-003", "ACC-777", "ACC-303", 1200.0)
-    time.sleep(1.0)
-
-    # 4. Critical Mule Transaction
-    print("\n" + "!"*60)
-    print(f"[ALERT] {datetime.now().strftime('%H:%M:%S')} - SUSPICIOUS ENDPOINT DETECTED")
-    print("!"*60)
-    print("[WARNING] High-value transfer to known flagged account pattern.")
-    print("[INFO] Routing funds: VICTIM-001 -> MULE-X99 (Rs. 1,50,000.00)")
     
-    response = send_transaction("TXN-999", "VICTIM-001", "MULE-X99", 150000.0)
+    # The exact payload to trigger the WHERE & WHEN ML Engines
+    payload = {
+        "tx_id": "SIM-DEMO-2026",
+        "sender_id": "ACC-VICTIM-01",
+        "receiver_id": "ACC-MULE-MASTER",
+        "amount": 125000.00,        # Must be > ₹50,000
+        "account_type": "Mule",     # Must be "Mule"
+        "timestamp": datetime.utcnow().isoformat(),
+        "last_known_lat": 28.6139,
+        "last_known_lon": 77.2090
+    }
     
-    if response and response.get('alert_triggered'):
-        print("[SUCCESS] ML Engine triggered! WebSocket payload broadcasted.")
-    else:
-        print("[FAIL] ML Engine did not trigger or request failed.")
+    print(f"🚨 Injecting Critical Fraud Event: ₹{payload['amount']} to {payload['receiver_id']}")
+    
+    try:
+        start_time = time.time()
+        response = requests.post(API_ENDPOINT, json=payload)
+        latency = time.time() - start_time
         
-    print("\n[INFO] Demo sequence complete.")
+        if response.status_code == 200:
+            print(f"✅ Alert successfully broadcasted to FastAPI backend (Latency: {latency:.3f}s)")
+            print("👉 Check the Mapbox Radar Frontend! Top-5 ATMs should be glowing.")
+        else:
+            print(f"⚠️ Backend rejected the payload. Status: {response.status_code}")
+            print(response.text)
+    except requests.exceptions.ConnectionError:
+        print("❌ CRITICAL: FastAPI backend is not running. Start Role 1's server first.")
 
 if __name__ == "__main__":
-    run_demo()
+    trigger_presentation_demo()
