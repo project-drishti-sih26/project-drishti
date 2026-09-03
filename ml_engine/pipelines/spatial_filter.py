@@ -174,12 +174,15 @@ def _filter_by_h3(
     """H3-based filtering using k-ring expansion."""
     import h3
 
-    # Max straight-line search radius from travel time budget
-    max_straight_km = (max_travel_minutes / 60) * URBAN_SPEED_KMPH / ROAD_FACTOR
+    # Max straight-line search radius from travel time budget.
+    # We inflate by 10% safety buffer (BUFFER_FACTOR = 1.10) to avoid edge boundary
+    # omissions when the mule is positioned at the extreme perimeter of their origin hex.
+    BUFFER_FACTOR = 1.10
+    buffered_straight_km = ((max_travel_minutes / 60) * URBAN_SPEED_KMPH / ROAD_FACTOR) * BUFFER_FACTOR
 
     mule_h3 = h3.latlng_to_cell(mule_lat, mule_lon, H3_RESOLUTION)
     avg_edge_km = h3.average_hexagon_edge_length(H3_RESOLUTION, unit="km")
-    k = max(1, int(max_straight_km / avg_edge_km))
+    k = max(1, math.ceil(buffered_straight_km / avg_edge_km))
     nearby_hexes = h3.grid_disk(mule_h3, k)
 
     candidates = []

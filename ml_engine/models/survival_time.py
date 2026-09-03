@@ -13,7 +13,7 @@ Phase 2 (After Role 5's data is ready): Train a real KaplanMeierFitter.
 import os
 import math
 import pickle
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional
 
 WEIGHTS_DIR = os.path.join(os.path.dirname(__file__), "..", "weights")
@@ -74,12 +74,26 @@ def prepare_survival_data(csv_path: str = HISTORICAL_TX_PATH):
     df["withdraw_ts"] = pd.to_datetime(df["withdrawal_timestamp"], errors="coerce")
 
     df["event_occurred"] = df["withdraw_ts"].notna().astype(int)
+
+    # For observed events: duration = time from transfer to actual withdrawal
     df["duration"] = (df["withdraw_ts"] - df["transfer_ts"]).dt.total_seconds() / 60
 
-    # For censored events, use a reasonable upper bound duration
-    max_observed = df.loc[df["event_occurred"] == 1, "duration"].max()
-    df["duration"] = df["duration"].fillna(max_observed if not math.isnan(max_observed) else 120)
-    df = df[df["duration"] > 0]  # Remove zero/negative durations
+    # FIX: For RIGHT-CENSORED rows (no withdrawal observed), the correct
+    # survival analysis duration is the time elapsed from transfer to the
+    # study end (i.e., now). Using max_observed or a constant 120 is
+    # statistically invalid — it inflates the KM curve and underestimates
+    # survival probability at early time points.
+    study_end = pd.Timestamp.utcnow().tz_localize(None)  # naive UTC
+    df["transfer_ts"] = df["transfer_ts"].dt.tz_localize(None)  # ensure naive for comparison
+    censored_mask = df["event_occurred"] == 0
+    df.loc[censored_mask, "duration"] = (
+        (study_end - df.loc[censored_mask, "transfer_ts"]).dt.total_seconds() / 60
+    )
+
+    # Clip to [1, 480] minutes — durations outside this range are likely data errors
+    # (0 min = instantaneous withdrawal is impossible; 480 min = 8 hours is a generous cap)
+    df["duration"] = df["duration"].clip(lower=1.0, upper=480.0)
+    df = df[df["duration"].notna() & (df["duration"] > 0)]
 
     print(f"[SurvivalTime] Prepared {len(df)} records | "
           f"Events: {df['event_occurred'].sum()} | Censored: {(df['event_occurred'] == 0).sum()}")
@@ -166,12 +180,18 @@ def predict_time_window(
     Returns:
         dict with keys: start, end, minutes_from_now, confidence
     """
+    from datetime import timezone
     try:
-        tx_dt = datetime.fromisoformat(transaction_timestamp.replace("Z", "+00:00"))
+        clean_ts = transaction_timestamp.replace("Z", "+00:00")
+        tx_dt = datetime.fromisoformat(clean_ts)
+        if tx_dt.tzinfo is not None:
+            tx_dt = tx_dt.astimezone(timezone.utc)
+        else:
+            tx_dt = tx_dt.replace(tzinfo=timezone.utc)
     except Exception:
-        tx_dt = datetime.utcnow()
+        tx_dt = datetime.now(timezone.utc)
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # ── Try trained model ──────────────────────────────────────────────────
     model = _load_model()
@@ -206,9 +226,7 @@ def predict_time_window(
 
 # ─── Self-test ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    from datetime import timezone
-
-    tx_time = datetime.utcnow().isoformat()
+    tx_time = datetime.now(timezone.utc).isoformat()
     print(f"\n[TEST] Transaction timestamp: {tx_time}")
 
     result = predict_time_window(

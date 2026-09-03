@@ -17,7 +17,7 @@ Internal pipeline:
 
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 
 # ─── ML sub-module imports ────────────────────────────────────────────────────
@@ -39,6 +39,30 @@ except ImportError:
 DELHI_CENTER_LAT = 28.6139
 DELHI_CENTER_LON = 77.2090
 TOP_N = 5   # Always return Top 5 ranked ATMs
+
+
+def _safe_float(val, default: float = 0.0) -> float:
+    """
+    Converts any numeric value (numpy.float64, numpy.int64, pandas NA, etc.)
+    to a standard Python float safe for json.dumps without default=str.
+    This prevents React/Recharts/Mapbox from receiving strings instead of numbers.
+    """
+    if val is None:
+        return default
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_int(val, default: int = 0) -> int:
+    """Same as _safe_float but returns int."""
+    if val is None:
+        return default
+    try:
+        return int(val)
+    except (TypeError, ValueError):
+        return default
 
 
 def predict_fraud_cashout(input_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -66,7 +90,7 @@ def predict_fraud_cashout(input_data: Dict[str, Any]) -> Dict[str, Any]:
     mule_id      = input_data.get("mule_account_id", "UNKNOWN")
     victim_id    = input_data.get("victim_account_id", "UNKNOWN")
     amount       = float(input_data.get("transaction_amount", 0))
-    tx_timestamp = input_data.get("transaction_timestamp", datetime.utcnow().isoformat())
+    tx_timestamp = input_data.get("transaction_timestamp", datetime.now(timezone.utc).isoformat())
     case_id      = input_data.get("case_id", f"CASE-{uuid.uuid4().hex[:8].upper()}")
 
     mule_lat = input_data.get("last_latitude") or DELHI_CENTER_LAT
@@ -144,15 +168,18 @@ def predict_fraud_cashout(input_data: Dict[str, Any]) -> Dict[str, Any]:
     for i, (atm, explanation) in enumerate(zip(top_candidates, explanations)):
         top_5_atms.append({
             "rank":              i + 1,
-            "location_id":       atm.get("location_id", f"ATM_UNKNOWN_{i+1}"),
-            "bank_name":         atm.get("bank_name", "Unknown Bank"),
-            "latitude":          atm.get("latitude", 0.0),
-            "longitude":         atm.get("longitude", 0.0),
-            "address":           atm.get("address", "Address not available"),
-            "distance_km":       atm.get("distance_km", 0.0),
-            "travel_time_mins":  atm.get("travel_time_mins", 0.0),
-            "confidence_score":  atm.get("confidence_score", atm.get("score", 0.0)),
-            "explanation":       explanation,
+            "location_id":       str(atm.get("location_id", f"ATM_UNKNOWN_{i+1}")),
+            "bank_name":         str(atm.get("bank_name", "Unknown Bank")),
+            # Explicit native float casts — prevents numpy.float64 reaching JSON/WebSocket
+            "latitude":          _safe_float(atm.get("latitude")),
+            "longitude":         _safe_float(atm.get("longitude")),
+            "address":           str(atm.get("address", "Address not available")),
+            "distance_km":       _safe_float(atm.get("distance_km")),
+            "travel_time_mins":  _safe_float(atm.get("travel_time_mins")),
+            # historical_fraud_count may come as numpy.int64 from pandas DataFrame
+            "historical_fraud_count": _safe_int(atm.get("historical_fraud_count", 0)),
+            "confidence_score":  _safe_float(atm.get("confidence_score", atm.get("score"))),
+            "explanation":       str(explanation),
         })
 
     alert_payload = {
@@ -161,7 +188,7 @@ def predict_fraud_cashout(input_data: Dict[str, Any]) -> Dict[str, Any]:
         "mule_account_id":            mule_id,
         "victim_account_id":          victim_id,
         "compromised_amount":         amount,
-        "detected_at":                datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+        "detected_at":                datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
         "time_window":                time_window,
         "top_5_atms":                 top_5_atms,
         "model_used":                 model_used,
@@ -180,7 +207,7 @@ def _build_empty_payload(case_id, mule_id, victim_id, amount, tx_timestamp) -> D
         "mule_account_id":            mule_id,
         "victim_account_id":          victim_id,
         "compromised_amount":         amount,
-        "detected_at":                datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S"),
+        "detected_at":                datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S"),
         "time_window":                {"start": None, "end": None, "minutes_from_now": 0, "confidence": 0.0},
         "top_5_atms":                 [],
         "model_used":                 "NONE",
@@ -195,7 +222,7 @@ if __name__ == "__main__":
         "last_latitude":         28.6315,   # Connaught Place, Delhi
         "last_longitude":        77.2167,
         "transaction_amount":    75000.0,
-        "transaction_timestamp": datetime.utcnow().isoformat(),
+        "transaction_timestamp": datetime.now(timezone.utc).isoformat(),
         "case_id":               "CYB-2026-DL-00001",
         "victim_account_id":     "ACC_VICTIM_0001",
     }

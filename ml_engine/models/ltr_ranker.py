@@ -76,7 +76,12 @@ def _build_feature_vector(
     from datetime import datetime
 
     try:
-        dt = datetime.fromisoformat(tx_timestamp.replace("Z", "+00:00"))
+        from datetime import timezone
+        clean_ts = tx_timestamp.replace("Z", "+00:00")
+        dt = datetime.fromisoformat(clean_ts)
+        # Normalize any timezone-aware datetime strictly to UTC
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc)
         hour = dt.hour
         weekday = dt.weekday()
     except Exception:

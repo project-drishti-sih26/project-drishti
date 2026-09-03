@@ -133,21 +133,51 @@ def generate_shap_explanations(
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(feature_matrix)
 
+    # ── Negative SHAP phrases: features that REDUCE selection probability ─
+    # We need different language for suppressors vs drivers.
+    NEGATIVE_FEATURE_PHRASES = {
+        "travel_time_mins":        "long road travel time (~{val:.0f} min) reduces likelihood",
+        "distance_km":             "large road distance ({val:.1f} km) reduces likelihood",
+        "historical_fraud_count":  "low fraud history at this ATM",
+        "mule_atm_affinity":       "mule has not used this ATM before",
+        "mule_network_affinity":   "no linked mule usage at this ATM",
+        "h3_fraud_density":        "low crime density in surrounding area",
+        "is_weekend":              "weekday timing (lower mule activity)",
+    }
+
     explanations = []
     for i, (atm, shap_row) in enumerate(zip(candidate_atms, shap_values)):
-        # Find top 2 features by absolute SHAP value
-        abs_shap = [(abs(sv), fname, sv) for sv, fname in zip(shap_row, feature_names)]
-        abs_shap.sort(reverse=True)
-        top_features = abs_shap[:2]
+        # Separate positive (drivers) and negative (suppressors) SHAP values
+        positive_shap = [
+            (sv, fname) for sv, fname in zip(shap_row, feature_names) if sv > 0
+        ]
+        negative_shap = [
+            (sv, fname) for sv, fname in zip(shap_row, feature_names) if sv < 0
+        ]
+
+        # Sort by magnitude: most impactful first
+        positive_shap.sort(key=lambda x: x[0], reverse=True)
+        negative_shap.sort(key=lambda x: x[0])  # most negative first
 
         parts = []
-        for _, fname, sv in top_features:
+        # Add top 1-2 positive drivers
+        for sv, fname in positive_shap[:2]:
             phrase_template = FEATURE_PHRASES.get(fname)
             if phrase_template:
                 val = atm.get(fname, 0)
-                phrase = phrase_template.replace("{val:.0f}", f"{val:.0f}")
-                phrase = phrase.replace("{val:.1f}", f"{val:.1f}")
+                phrase = phrase_template.replace("{val:.0f}", f"{val:.0f}").\
+                    replace("{val:.1f}", f"{val:.1f}")
                 parts.append(phrase)
+
+        # Add top 1 negative suppressor (if strong enough)
+        for sv, fname in negative_shap[:1]:
+            if abs(sv) > 0.1:  # Only mention if it has meaningful negative impact
+                phrase_template = NEGATIVE_FEATURE_PHRASES.get(fname)
+                if phrase_template:
+                    val = atm.get(fname, 0)
+                    phrase = phrase_template.replace("{val:.0f}", f"{val:.0f}").\
+                        replace("{val:.1f}", f"{val:.1f}")
+                    parts.append(f"[Note: {phrase}]")
 
         base = f"Rank #{i + 1}: "
         if parts:
