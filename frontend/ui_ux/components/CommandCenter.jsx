@@ -280,8 +280,12 @@ const CommandCenter = () => {
   };
 
   const handleFeedback = (actionType) => {
-    if (actionType === 'intercepted') {
+    if (actionType === 'intercepted' || actionType === 'resolved') {
       setAtms(prev => prev.map(a => a.id === selectedAtmId ? { ...a, statusTag: 'Resolved' } : a));
+      setActiveCase(prev => ({ ...prev, status: 'Resolved' }));
+    } else if (actionType === 'active') {
+      setAtms(prev => prev.map(a => a.id === selectedAtmId ? { ...a, statusTag: undefined } : a));
+      setActiveCase(prev => ({ ...prev, status: 'Active' }));
     }
   };
 
@@ -500,6 +504,7 @@ const CommandCenter = () => {
                   predictedAtms={atms}
                   showCountdown={false}
                   onFeedback={handleFeedback}
+                  isResolved={activeCase.status === 'Resolved'}
                 />
               </div>
             </div>
@@ -680,6 +685,7 @@ const CommandCenter = () => {
                   onSelectAtm={handleSelectAtm}
                   predictedAtms={atms}
                   onFeedback={handleFeedback}
+                  isResolved={activeCase.status === 'Resolved'}
                 />
               </div>
             </div>

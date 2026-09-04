@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 /**
  * SidebarRight Component (Role 4 - UI/UX)
@@ -73,19 +73,25 @@ const SidebarRight = ({
       cctv_status: 'Maintenance Offline',
       notes: 'Secondary node based on cell tower perimeter coverage.'
     }
-  ]
+  ],
+  isResolved: isResolvedProp = false
 }) => {
   const [expandedAtmId, setExpandedAtmId] = useState('ATM-091');
-  const [isMuleFrozen, setIsMuleFrozen] = useState(false);
+  const [isResolved, setIsResolved] = useState(isResolvedProp);
+
+  useEffect(() => {
+    setIsResolved(isResolvedProp);
+  }, [isResolvedProp]);
 
   const toggleExpand = (atm) => {
     setExpandedAtmId(expandedAtmId === atm.id ? null : atm.id);
     onSelectAtm(atm);
   };
 
-  const handleFreeze = () => {
-    setIsMuleFrozen(true);
-    onFeedback('freeze_mule');
+  const handleToggleResolved = (e) => {
+    const nextVal = e.target.checked;
+    setIsResolved(nextVal);
+    onFeedback(nextVal ? 'resolved' : 'active');
   };
 
   return (
@@ -172,33 +178,44 @@ const SidebarRight = ({
         </div>
       </div>
 
-      {/* 3. CASE ACTIONS (TEXT-ONLY) */}
+      {/* 3. CASE ACTIONS */}
       <div className="bg-white rounded-sm border border-slate-200 p-3.5 space-y-2.5">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block pb-1 border-b border-slate-100">
           Case Actions
         </span>
 
-        <div className="space-y-2 pt-1">
-          {/* Primary Action */}
-          <button
-            onClick={handleFreeze}
-            disabled={isMuleFrozen}
-            className={`w-full py-2 px-3 font-semibold text-xs rounded-sm transition-colors cursor-pointer ${
-              isMuleFrozen
-                ? 'bg-slate-100 text-slate-400 border border-slate-200'
-                : 'bg-rose-700 hover:bg-rose-800 text-white'
-            }`}
-          >
-            {isMuleFrozen ? 'Debit Restriction Requested' : 'Freeze Mule Account'}
-          </button>
-
-          {/* Secondary Action */}
-          <button
-            onClick={() => onFeedback('intercepted')}
-            className="w-full py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-sm transition-colors cursor-pointer"
-          >
-            Mark Case Resolved
-          </button>
+        <div className="pt-1">
+          <label className={`flex items-start gap-3 p-3 rounded-sm border transition-all cursor-pointer select-none ${
+            isResolved 
+              ? 'bg-emerald-50/60 border-emerald-300' 
+              : 'bg-slate-50/70 border-slate-200 hover:border-slate-300 hover:bg-slate-100/70'
+          }`}>
+            <input
+              type="checkbox"
+              checked={isResolved}
+              onChange={handleToggleResolved}
+              className="w-4 h-4 mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-0 cursor-pointer accent-slate-900"
+            />
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">
+                  {isResolved ? 'Case Resolved' : 'Mark Case Resolved'}
+                </span>
+                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${
+                  isResolved 
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                    : 'bg-slate-200 text-slate-600 border border-slate-300'
+                }`}>
+                  {isResolved ? 'RESOLVED' : 'UNRESOLVED'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                {isResolved 
+                  ? 'Interception complete • Funds restrained' 
+                  : 'Check to mark this incident as resolved'}
+              </p>
+            </div>
+          </label>
         </div>
       </div>
     </aside>
