@@ -20,7 +20,8 @@
 ---
 
 ## 📑 Table of Contents
-> 📘 **Consolidated Specification:** All technical blueprints, database schemas, ML equations, and role execution docs are unified in [**PROJECT_BLUEPRINT.md**](PROJECT_BLUEPRINT.md).
+> 📘 **Consolidated Specification:** All technical blueprints, database schemas, ML equations, and role execution docs are unified in [**PROJECT_BLUEPRINT.md**](PROJECT_BLUEPRINT.md).  
+> 🚀 **Complete Deployment Guide:** Step-by-step instructions for Docker, local bare-metal, and cloud setup in [**DEPLOYMENT.md**](DEPLOYMENT.md).
 
 - [1. Executive Summary & Problem Context](#-1-executive-summary--problem-context)
 - [2. The Drishti Solution](#-2-the-drishti-solution)

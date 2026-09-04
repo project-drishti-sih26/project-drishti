@@ -159,7 +159,7 @@ const NavSidebar = ({
 
       {/* 3. RESTRAINED FOOTER */}
       <div className="p-3 border-t border-slate-200 text-xs space-y-2">
-        <div className="flex items-center justify-between text-[11px] text-slate-500 font-normal">
+        <div className="flex items-center justify-between text-xs text-slate-500 font-normal">
           <span>Feed Status</span>
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
@@ -167,9 +167,9 @@ const NavSidebar = ({
           </div>
         </div>
 
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span className="truncate">Insp. V. Rawat</span>
-          <span className="text-[10px] font-mono text-slate-400">HQ-01</span>
+          <span className="text-xs font-mono text-slate-400">HQ-01</span>
         </div>
       </div>
     </aside>

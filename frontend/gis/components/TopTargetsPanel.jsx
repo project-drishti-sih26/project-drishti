@@ -55,7 +55,7 @@ export const TopTargetsPanel = ({
             Top Predicted Targets
           </h3>
         </div>
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+        <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
           {targets.length} LOCATIONS
         </span>
       </div>
@@ -102,12 +102,12 @@ export const TopTargetsPanel = ({
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span
-                      className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${badge.bg}`}
+                      className={`text-xs font-mono px-1.5 py-0.2 rounded border ${badge.bg}`}
                     >
                       {badge.label}
                     </span>
                     {target.travelTime && (
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-xs text-slate-400 font-mono">
                         ⏱ {target.travelTime}
                       </span>
                     )}
@@ -120,7 +120,7 @@ export const TopTargetsPanel = ({
                 <div className={`text-xs font-mono ${getRiskColor(target)}`}>
                   {scorePercent !== null ? `${scorePercent}%` : '—'}
                 </div>
-                <div className="text-[9px] font-mono text-slate-500 uppercase">
+                <div className="text-xs font-mono text-slate-500 uppercase">
                   {target.riskTier || 'Risk'}
                 </div>
               </div>

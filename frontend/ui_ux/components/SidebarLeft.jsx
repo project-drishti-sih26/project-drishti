@@ -34,7 +34,7 @@ const SidebarLeft = ({
           <p className="text-xs text-slate-500 mt-0.5">Method: {caseData.crime_vector} • Logged at {caseData.debit_time}</p>
         </div>
         <div className="text-right">
-          <span className="text-[11px] text-slate-400 block uppercase">Reported Amount</span>
+          <span className="text-xs text-slate-400 block uppercase">Reported Amount</span>
           <span className="text-base font-bold text-slate-900 font-mono">
             ₹{Number(caseData.compromised_amount).toLocaleString('en-IN')}
           </span>

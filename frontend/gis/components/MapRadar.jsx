@@ -203,29 +203,29 @@ const MapRadar = ({
       const popupHtml = `
         <div class="p-3 bg-slate-950 text-slate-100 rounded-lg border border-cyan-500/40 shadow-2xl font-sans text-xs min-w-[200px]">
           <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-800">
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+            <span class="px-1.5 py-0.5 rounded text-xs font-mono font-bold ${
               rank === 1 ? 'bg-red-500/30 text-red-400 border border-red-500/50' : 'bg-slate-800 text-cyan-300'
             }">
               RANK #${rank}
             </span>
-            <span class="text-[10px] font-mono uppercase text-slate-400 font-semibold">${typeLabel}</span>
+            <span class="text-xs font-mono uppercase text-slate-400 font-semibold">${typeLabel}</span>
           </div>
           <p class="font-bold text-slate-100 text-sm leading-snug">${loc.name || 'Target Node'}</p>
-          ${loc.address ? `<p class="text-[11px] text-slate-400 mt-1 leading-tight">${loc.address}</p>` : ''}
-          <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between font-mono text-[11px]">
+          ${loc.address ? `<p class="text-xs text-slate-400 mt-1 leading-tight">${loc.address}</p>` : ''}
+          <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between font-mono text-xs">
             <span class="text-slate-400">Cash-out probability:</span>
             <span class="font-bold ${scoreColor}">${
               scorePercent !== null ? `${scorePercent}%` : 'n/a'
-            }${tier ? ` <span class="text-[9px] opacity-80">${tier}</span>` : ''}</span>
+            }${tier ? ` <span class="text-xs opacity-80">${tier}</span>` : ''}</span>
           </div>
           ${loc.travelTime ? `
-            <div class="mt-1 flex items-center justify-between font-mono text-[11px]">
+            <div class="mt-1 flex items-center justify-between font-mono text-xs">
               <span class="text-slate-400">Travel Time:</span>
               <span class="text-cyan-300">~${loc.travelTime}</span>
             </div>
           ` : ''}
           ${loc.expectedWindow ? `
-            <div class="mt-1 flex items-center justify-between font-mono text-[11px]">
+            <div class="mt-1 flex items-center justify-between font-mono text-xs">
               <span class="text-slate-400">Window:</span>
               <span class="text-amber-300">${loc.expectedWindow}</span>
             </div>
@@ -293,7 +293,7 @@ const MapRadar = ({
           <span className="text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase">
             GIS SPATIO-TEMPORAL RADAR
           </span>
-          <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40 font-semibold">
+          <span className="hidden sm:inline-block text-xs font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40 font-semibold">
             {MAP_STYLES[currentStyleKey]?.label.toUpperCase()}
           </span>
         </div>
@@ -305,7 +305,7 @@ const MapRadar = ({
               key={key}
               type="button"
               onClick={() => handleStyleChange(key)}
-              className={`px-2 py-1 text-[11px] font-mono font-medium rounded transition-all cursor-pointer ${
+              className={`px-2 py-1 text-xs font-mono font-medium rounded transition-all cursor-pointer ${
                 currentStyleKey === key
                   ? 'bg-cyan-500 text-slate-950 font-bold shadow'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'

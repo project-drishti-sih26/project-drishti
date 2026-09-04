@@ -10,6 +10,10 @@ import React, { useState } from 'react';
 const SidebarRight = ({
   countdown = '10:56',
   windowIst = null,
+  // The overview's hero block shows the same timer at 3x this size directly
+  // above. Two identical countdowns on one screen is the kind of duplication
+  // that makes a dashboard feel cluttered without adding information.
+  showCountdown = true,
   onFeedback = () => {},
   selectedAtmId = 'ATM-091',
   onSelectAtm = () => {},
@@ -87,14 +91,15 @@ const SidebarRight = ({
   return (
     <aside className="w-full flex flex-col gap-5">
       {/* 1. TIMEFRAME COUNTDOWN */}
+      {showCountdown && (
       <div className="bg-white rounded-sm border border-slate-200 p-4 text-center">
-        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
           Time to Predicted Cash-Out
         </span>
         <div className="mt-1.5 text-3xl font-bold font-mono text-rose-700">
           {countdown}
         </div>
-        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">mm:ss remaining</span>
+        <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">mm:ss remaining</span>
         <p className="text-xs text-slate-500 mt-1">
           {/* Said "Proximity estimate based on last cell-tower registration."
               The window comes from a Cox proportional-hazards survival model
@@ -105,6 +110,7 @@ const SidebarRight = ({
             : 'Survival model estimate of the debit-to-withdrawal delay.'}
         </p>
       </div>
+      )}
 
       {/* 2. ATM LOCATIONS */}
       <div className="bg-white rounded-sm border border-slate-200 p-3.5 space-y-2.5">
@@ -117,7 +123,7 @@ const SidebarRight = ({
               frequently NOT rank 1, which is precisely the value it adds over a
               distance sort. Labelling it "by Proximity" invited a judge to
               conclude the whole thing is a `sort by distance`. */}
-          <span className="text-[11px] text-slate-400">Ranked by predicted probability</span>
+          <span className="text-xs text-slate-400">Ranked by predicted probability</span>
         </div>
 
         <div className="space-y-2">
@@ -137,27 +143,27 @@ const SidebarRight = ({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className={`w-4 h-4 rounded-sm flex items-center justify-center font-bold text-[10px] ${
+                    <span className={`w-4 h-4 rounded-sm flex items-center justify-center font-bold text-xs ${
                       atm.rank === 1 ? 'bg-rose-100 text-rose-800 border border-rose-300' : 'bg-slate-100 text-slate-700 border border-slate-200'
                     }`}>
                       {atm.rank}
                     </span>
                     <div>
                       <div className="text-xs font-bold text-slate-900">{atm.name}</div>
-                      <div className="text-[11px] text-slate-500 truncate max-w-[140px]">{atm.location}</div>
+                      <div className="text-xs text-slate-500 truncate max-w-[140px]">{atm.location}</div>
                     </div>
                   </div>
 
                   <div className="text-right">
                     <span className="text-xs font-bold text-slate-900 block font-mono">{atm.probability}</span>
-                    <span className="text-[10px] text-slate-500">{atm.distance} ({atm.eta})</span>
+                    <span className="text-xs text-slate-500">{atm.distance} ({atm.eta})</span>
                   </div>
                 </div>
 
                 {isExpanded && (
                   <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-600 space-y-1">
                     <div><strong className="text-slate-800">Case Note:</strong> {atm.notes}</div>
-                    <div className="text-[11px] text-slate-500">CCTV: {atm.cctv_status}</div>
+                    <div className="text-xs text-slate-500">CCTV: {atm.cctv_status}</div>
                   </div>
                 )}
               </div>

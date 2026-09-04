@@ -146,7 +146,7 @@ export const GisDashboard = ({
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-white font-mono uppercase">
                 GIS Spatio-Temporal Radar
               </h1>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-semibold">
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-semibold">
                 ROLE 3 • DRISHTI
               </span>
             </div>
@@ -159,13 +159,13 @@ export const GisDashboard = ({
         {/* Demo Alert Switcher Pill Bar */}
         {mockMultipleAlerts && mockMultipleAlerts.length > 1 && (
           <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs font-mono">
-            <span className="text-[10px] text-slate-500 uppercase px-1.5">Alerts:</span>
+            <span className="text-xs text-slate-500 uppercase px-1.5">Alerts:</span>
             {mockMultipleAlerts.map((alert, idx) => (
               <button
                 key={alert.alert_id || idx}
                 type="button"
                 onClick={() => handleSwitchAlert(alert)}
-                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                className={`px-2 py-0.5 rounded text-xs font-semibold transition-all ${
                   currentAlert?.alertId === (alert.alert_id || alert.id)
                     ? 'bg-cyan-600 text-white shadow-sm'
                     : 'text-slate-400 hover:text-white hover:bg-slate-800'

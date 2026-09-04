@@ -74,7 +74,7 @@ const CenterRadar = ({
     <div className="bg-white rounded-sm border border-slate-200 p-4 flex flex-col space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Tactical Spatial Radar (Delhi NCR Sector)</h3>
+          <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Map — Predicted Cash-Out Locations</h3>
           {/* Was a fixed "28.6328° N, 77.2195° E" — not the mule's actual last
               known position, so the caption disagreed with the origin marker
               plotted on the map beside it. */}
@@ -87,7 +87,7 @@ const CenterRadar = ({
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setViewMode(viewMode === 'map' ? 'schematic' : 'map')}
-            className="text-[11px] font-mono px-2 py-0.5 rounded-sm bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors"
+            className="text-xs font-mono px-2 py-0.5 rounded-sm bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors"
           >
             {viewMode === 'map' ? 'Switch to Schematic Grid' : 'Switch to Interactive Map'}
           </button>
@@ -136,13 +136,13 @@ const CenterRadar = ({
               <line x1="30%" y1="36%" x2="50%" y2="46%" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 4" />
             </svg>
 
-            <span className="absolute text-[10px] text-slate-500 font-mono" style={{ left: '52%', top: '51%' }}>
+            <span className="absolute text-xs text-slate-500 font-mono" style={{ left: '52%', top: '51%' }}>
               CP Central Park
             </span>
-            <span className="absolute text-[9px] text-slate-600 font-mono" style={{ left: '72%', top: '65%' }}>
+            <span className="absolute text-xs text-slate-600 font-mono" style={{ left: '72%', top: '65%' }}>
               Barakhamba Rd
             </span>
-            <span className="absolute text-[9px] text-slate-600 font-mono" style={{ left: '38%', top: '78%' }}>
+            <span className="absolute text-xs text-slate-600 font-mono" style={{ left: '38%', top: '78%' }}>
               Janpath Lane
             </span>
 
@@ -151,10 +151,10 @@ const CenterRadar = ({
               className="absolute z-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
               style={{ left: '30%', top: '36%' }}
             >
-              <div className="w-6 h-6 rounded-sm bg-slate-700 text-white flex items-center justify-center font-bold text-[10px] border border-slate-500">
+              <div className="w-6 h-6 rounded-sm bg-slate-700 text-white flex items-center justify-center font-bold text-xs border border-slate-500">
                 P12
               </div>
-              <span className="text-[10px] font-mono text-slate-200 bg-slate-800 px-1.5 py-0.5 rounded-sm border border-slate-700 mt-1">
+              <span className="text-xs font-mono text-slate-200 bg-slate-800 px-1.5 py-0.5 rounded-sm border border-slate-700 mt-1">
                 PCR-12 (1.4 km)
               </span>
             </div>
@@ -170,14 +170,14 @@ const CenterRadar = ({
                   style={{ left: `${atm.xPercent}%`, top: `${atm.yPercent}%` }}
                 >
                   <div className="flex flex-col items-center">
-                    <div className={`w-5 h-5 rounded-sm flex items-center justify-center font-bold text-[10px] ${
+                    <div className={`w-5 h-5 rounded-sm flex items-center justify-center font-bold text-xs ${
                       atm.rank === 1
                         ? 'bg-rose-700 text-white border border-rose-500'
                         : 'bg-slate-800 text-slate-300 border border-slate-600'
                     } ${isSelected ? 'ring-2 ring-slate-400' : ''}`}>
                       {atm.rank}
                     </div>
-                    <span className="bg-slate-800 text-slate-300 text-[10px] font-mono px-1 py-0.5 rounded-sm border border-slate-700 mt-1 whitespace-nowrap">
+                    <span className="bg-slate-800 text-slate-300 text-xs font-mono px-1 py-0.5 rounded-sm border border-slate-700 mt-1 whitespace-nowrap">
                       {atm.name}
                     </span>
                   </div>

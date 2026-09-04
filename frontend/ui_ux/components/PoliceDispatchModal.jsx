@@ -108,7 +108,7 @@ const PoliceDispatchModal = ({
             </div>
           </div>
 
-          <p className="text-slate-500 text-[11px] leading-relaxed">
+          <p className="text-slate-500 text-xs leading-relaxed">
             This official notice directs quick-response field units to verify ongoing cash withdrawals at the identified physical ATM location.
           </p>
         </div>

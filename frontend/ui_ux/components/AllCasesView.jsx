@@ -100,7 +100,7 @@ const AllCasesView = ({
         <div className="flex items-center bg-slate-50/70 rounded-[4px] border border-slate-200 divide-x divide-slate-200 overflow-hidden shadow-2xs">
           {/* Stat 1: Total */}
           <div className="w-24 px-3 py-1.5 text-center">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium block">
+            <span className="text-xs uppercase tracking-wider text-slate-400 font-medium block">
               Total
             </span>
             <span className="text-base font-semibold text-slate-900 font-mono leading-tight mt-0.5 block">
@@ -110,7 +110,7 @@ const AllCasesView = ({
 
           {/* Stat 2: Urgent (Red value only, no background tint) */}
           <div className="w-24 px-3 py-1.5 text-center">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium block">
+            <span className="text-xs uppercase tracking-wider text-slate-400 font-medium block">
               Urgent
             </span>
             <span className="text-base font-semibold text-rose-700 font-mono leading-tight mt-0.5 block">
@@ -120,7 +120,7 @@ const AllCasesView = ({
 
           {/* Stat 3: Restrained */}
           <div className="w-24 px-3 py-1.5 text-center">
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium block">
+            <span className="text-xs uppercase tracking-wider text-slate-400 font-medium block">
               Restrained
             </span>
             <span className="text-base font-semibold text-slate-900 font-mono leading-tight mt-0.5 block">
@@ -186,7 +186,7 @@ const AllCasesView = ({
         <div className="lg:col-span-8 bg-white rounded-[4px] border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-normal text-[11px]">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-normal text-xs">
                 <tr>
                   <th className="py-2.5 px-3">Case ID</th>
                   <th className="py-2.5 px-3">Victim Account</th>
@@ -199,7 +199,7 @@ const AllCasesView = ({
                   >
                     <div className="inline-flex items-center gap-1">
                       <span>Amount</span>
-                      <span className="font-mono text-[10px] text-slate-400 group-hover:text-slate-700">
+                      <span className="font-mono text-xs text-slate-400 group-hover:text-slate-700">
                         {sortField === 'amount' ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
                       </span>
                     </div>
@@ -212,7 +212,7 @@ const AllCasesView = ({
                   >
                     <div className="inline-flex items-center gap-1">
                       <span>Status</span>
-                      <span className="font-mono text-[10px] text-slate-400 group-hover:text-slate-700">
+                      <span className="font-mono text-xs text-slate-400 group-hover:text-slate-700">
                         {sortField === 'status' ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
                       </span>
                     </div>
@@ -237,21 +237,21 @@ const AllCasesView = ({
                         isSelected ? 'border-l-slate-900 bg-slate-50' : 'border-l-transparent'
                       }`}>
                         <div className="font-medium text-slate-900 font-mono">{c.case_id}</div>
-                        <div className="text-[11px] text-slate-500 font-normal">{c.debit_time}</div>
+                        <div className="text-xs text-slate-500 font-normal">{c.debit_time}</div>
                       </td>
 
                       {/* 3. STANDARDIZED VICTIM ACCOUNT DISPLAY */}
                       <td className="py-2.5 px-3">
                         <div className="font-medium text-slate-900">{c.victim_name}</div>
-                        <div className="text-[11px] text-slate-700 font-mono font-medium">{c.victim_account}</div>
-                        <div className="text-[11px] text-slate-500 font-normal">{c.victim_bank}</div>
+                        <div className="text-xs text-slate-700 font-mono font-medium">{c.victim_account}</div>
+                        <div className="text-xs text-slate-500 font-normal">{c.victim_bank}</div>
                       </td>
 
                       {/* 3. STANDARDIZED MULE ACCOUNT DISPLAY */}
                       <td className="py-2.5 px-3">
                         <div className="font-medium text-slate-900">{c.mule_name}</div>
-                        <div className="text-[11px] text-slate-700 font-mono font-medium">{c.mule_account}</div>
-                        <div className="text-[11px] text-slate-500 font-normal">{c.mule_bank}</div>
+                        <div className="text-xs text-slate-700 font-mono font-medium">{c.mule_account}</div>
+                        <div className="text-xs text-slate-500 font-normal">{c.mule_bank}</div>
                       </td>
 
                       {/* Amount */}
@@ -259,12 +259,12 @@ const AllCasesView = ({
                         <div className="font-medium text-slate-900 font-mono">
                           ₹{Number(c.compromised_amount).toLocaleString('en-IN')}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-normal">{c.crime_vector}</div>
+                        <div className="text-xs text-slate-500 font-normal">{c.crime_vector}</div>
                       </td>
 
                       {/* Status */}
                       <td className="py-2.5 px-3">
-                        <span className={`inline-block text-[11px] font-mono leading-none px-1.5 py-0.5 rounded-[3px] border ${getStatusBadge(c.status)}`}>
+                        <span className={`inline-block text-xs font-mono leading-none px-1.5 py-0.5 rounded-[3px] border ${getStatusBadge(c.status)}`}>
                           {c.status}
                         </span>
                       </td>
@@ -276,7 +276,7 @@ const AllCasesView = ({
                             onSelectCase(c);
                             onOpenLiveIncident(c);
                           }}
-                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-white font-medium text-[11px] rounded-[3px] transition-colors cursor-pointer"
+                          className="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-[3px] transition-colors cursor-pointer"
                         >
                           View
                         </button>
@@ -301,14 +301,14 @@ const AllCasesView = ({
             <div className="pb-2.5 border-b border-slate-100 flex items-center justify-between">
               <div>
                 {/* 2. DARKENED LABEL CONTRAST */}
-                <span className="text-[11px] font-medium text-slate-700 uppercase tracking-wide block">
+                <span className="text-xs font-medium text-slate-700 uppercase tracking-wide block">
                   Case Details
                 </span>
                 <div className="text-xs font-medium text-slate-900 font-mono">
                   {activeSelectedCase.case_id}
                 </div>
               </div>
-              <span className={`text-[11px] font-mono leading-none px-1.5 py-0.5 rounded-[3px] border ${getStatusBadge(activeSelectedCase.status)}`}>
+              <span className={`text-xs font-mono leading-none px-1.5 py-0.5 rounded-[3px] border ${getStatusBadge(activeSelectedCase.status)}`}>
                 {activeSelectedCase.status}
               </span>
             </div>
@@ -317,13 +317,13 @@ const AllCasesView = ({
               {/* Reported Amount */}
               <div className="p-2.5 bg-slate-50 rounded-[3px] border border-slate-200">
                 {/* 2. DARKENED LABEL CONTRAST */}
-                <span className="text-[11px] font-medium text-slate-700 uppercase tracking-wide block">
+                <span className="text-xs font-medium text-slate-700 uppercase tracking-wide block">
                   Reported Amount
                 </span>
                 <span className="text-base font-medium font-mono text-slate-900">
                   ₹{Number(activeSelectedCase.compromised_amount).toLocaleString('en-IN')}
                 </span>
-                <div className="text-[11px] text-slate-600 font-normal mt-0.5">
+                <div className="text-xs text-slate-600 font-normal mt-0.5">
                   Logged: {activeSelectedCase.debit_time} • {activeSelectedCase.crime_vector}
                 </div>
               </div>
@@ -331,38 +331,38 @@ const AllCasesView = ({
               {/* 3. STANDARDIZED VICTIM ACCOUNT IN DETAILS PANEL */}
               <div className="space-y-1">
                 {/* 2. DARKENED LABEL CONTRAST */}
-                <span className="text-[11px] font-medium text-slate-700 uppercase tracking-wide block">
+                <span className="text-xs font-medium text-slate-700 uppercase tracking-wide block">
                   Victim Account
                 </span>
                 <div className="p-2 bg-slate-50/70 rounded-[3px] border border-slate-200 space-y-0.5">
                   <div className="font-medium text-slate-900">{activeSelectedCase.victim_name}</div>
-                  <div className="text-slate-800 font-mono text-[11px] font-medium">{activeSelectedCase.victim_account}</div>
-                  <div className="text-slate-600 text-[11px] font-normal">{activeSelectedCase.victim_bank}</div>
+                  <div className="text-slate-800 font-mono text-xs font-medium">{activeSelectedCase.victim_account}</div>
+                  <div className="text-slate-600 text-xs font-normal">{activeSelectedCase.victim_bank}</div>
                 </div>
               </div>
 
               {/* 3. STANDARDIZED MULE ACCOUNT IN DETAILS PANEL */}
               <div className="space-y-1">
                 {/* 2. DARKENED LABEL CONTRAST */}
-                <span className="text-[11px] font-medium text-slate-700 uppercase tracking-wide block">
+                <span className="text-xs font-medium text-slate-700 uppercase tracking-wide block">
                   Mule Account
                 </span>
                 <div className="p-2 bg-slate-50/70 rounded-[3px] border border-slate-200 space-y-0.5">
                   <div className="font-medium text-slate-900">{activeSelectedCase.mule_name}</div>
-                  <div className="text-slate-800 font-mono text-[11px] font-medium">{activeSelectedCase.mule_account}</div>
-                  <div className="text-slate-600 text-[11px] font-normal">{activeSelectedCase.mule_bank}</div>
+                  <div className="text-slate-800 font-mono text-xs font-medium">{activeSelectedCase.mule_account}</div>
+                  <div className="text-slate-600 text-xs font-normal">{activeSelectedCase.mule_bank}</div>
                 </div>
               </div>
 
               {/* Predicted ATM Node */}
               <div className="space-y-1">
                 {/* 2. DARKENED LABEL CONTRAST */}
-                <span className="text-[11px] font-medium text-slate-700 uppercase tracking-wide block">
+                <span className="text-xs font-medium text-slate-700 uppercase tracking-wide block">
                   Predicted ATM Node
                 </span>
                 <div className="p-2 bg-slate-50/70 rounded-[3px] border border-slate-200 space-y-0.5">
                   <div className="font-medium text-slate-900">{activeSelectedCase.predicted_atm}</div>
-                  <div className="text-slate-600 text-[11px] font-normal">Assigned: {activeSelectedCase.assigned_patrol}</div>
+                  <div className="text-slate-600 text-xs font-normal">Assigned: {activeSelectedCase.assigned_patrol}</div>
                 </div>
               </div>
             </div>

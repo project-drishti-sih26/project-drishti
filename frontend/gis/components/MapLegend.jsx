@@ -17,20 +17,20 @@ export const MapLegend = () => {
       >
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-cyan-400" />
-          <span className="font-bold text-cyan-300 tracking-wider uppercase text-[11px]">
+          <span className="font-bold text-cyan-300 tracking-wider uppercase text-xs">
             Map Legend
           </span>
         </div>
         <button 
           type="button" 
-          className="text-slate-400 hover:text-white text-[10px] px-1 bg-slate-800 rounded"
+          className="text-slate-400 hover:text-white text-xs px-1 bg-slate-800 rounded"
         >
           {isExpanded ? '▲ HIDE' : '▼ SHOW'}
         </button>
       </div>
 
       {isExpanded && (
-        <div className="mt-2.5 pt-2 border-t border-slate-800 space-y-2 text-[10px]">
+        <div className="mt-2.5 pt-2 border-t border-slate-800 space-y-2 text-xs">
           {/* Target Types */}
           <div>
             <span className="text-slate-400 font-semibold uppercase tracking-wider block mb-1">
@@ -76,16 +76,16 @@ export const MapLegend = () => {
               H3 Spatial Risk Hexagons
             </span>
             <div className="flex items-center justify-between gap-1">
-              <span className="px-1 py-0.5 rounded bg-red-500/30 text-red-400 border border-red-500/60 text-[9px]">
+              <span className="px-1 py-0.5 rounded bg-red-500/30 text-red-400 border border-red-500/60 text-xs">
                 Critical
               </span>
-              <span className="px-1 py-0.5 rounded bg-amber-500/30 text-amber-400 border border-amber-500/60 text-[9px]">
+              <span className="px-1 py-0.5 rounded bg-amber-500/30 text-amber-400 border border-amber-500/60 text-xs">
                 High
               </span>
-              <span className="px-1 py-0.5 rounded bg-yellow-500/30 text-yellow-400 border border-yellow-500/60 text-[9px]">
+              <span className="px-1 py-0.5 rounded bg-yellow-500/30 text-yellow-400 border border-yellow-500/60 text-xs">
                 Medium
               </span>
-              <span className="px-1 py-0.5 rounded bg-emerald-500/30 text-emerald-400 border border-emerald-500/60 text-[9px]">
+              <span className="px-1 py-0.5 rounded bg-emerald-500/30 text-emerald-400 border border-emerald-500/60 text-xs">
                 Low
               </span>
             </div>

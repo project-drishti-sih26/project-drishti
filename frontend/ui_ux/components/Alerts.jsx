@@ -3,8 +3,13 @@ import React from 'react';
 /**
  * Alerts Component (Role 4 - UI/UX)
  * Urgent Case Notification Banner (Text-only button, flat badge)
+ *
+ * `compact` is set by the overview, where the hero block below already carries
+ * the countdown, the interception window and the dispatch button at full size.
+ * Repeating all three here made the top of the page read as three competing
+ * copies of the same alert.
  */
-const Alerts = ({ alert, onOpenCase = () => {} }) => {
+const Alerts = ({ alert, onOpenCase = () => {}, compact = false }) => {
   if (!alert) return null;
   const amount = Number(alert.amount || alert.compromised_amount || 0);
 
@@ -21,7 +26,7 @@ const Alerts = ({ alert, onOpenCase = () => {} }) => {
     <div className="bg-rose-50/80 border border-rose-200 rounded-sm p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800 bg-rose-100 border border-rose-300 px-1.5 py-0.5 rounded-sm">
+          <span className="text-xs font-bold uppercase tracking-wider text-rose-800 bg-rose-100 border border-rose-300 px-1.5 py-0.5 rounded-sm">
             Urgent Case Notification
           </span>
           {alert.detectedAtIst && (
@@ -32,20 +37,24 @@ const Alerts = ({ alert, onOpenCase = () => {} }) => {
         </div>
         <p className="text-xs font-medium text-slate-800 mt-1">
           Unauthorized debit of <strong className="font-bold text-rose-800">₹{amount.toLocaleString('en-IN')}</strong> reported to beneficiary account ({alert.mule_account || 'HDFC •••• 9201'}).
-          {windowIst
-            ? <> Predicted cash-out window <strong className="font-bold">{windowIst}</strong>{countdown ? <> — <span className="font-mono">{countdown}</span> remaining.</> : '.'}</>
-            : countdown ? <> Time to predicted cash-out: <span className="font-mono font-bold">{countdown}</span> (mm:ss).</> : ''}
+          {compact
+            ? ''
+            : windowIst
+              ? <> Predicted cash-out window <strong className="font-bold">{windowIst}</strong>{countdown ? <> — <span className="font-mono">{countdown}</span> remaining.</> : '.'}</>
+              : countdown ? <> Time to predicted cash-out: <span className="font-mono font-bold">{countdown}</span> (mm:ss).</> : ''}
         </p>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          onClick={onOpenCase}
-          className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold rounded-sm transition-colors cursor-pointer"
-        >
-          Generate Dispatch Order
-        </button>
-      </div>
+      {!compact && (
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onOpenCase}
+            className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold rounded-sm transition-colors cursor-pointer"
+          >
+            Generate Dispatch Order
+          </button>
+        </div>
+      )}
     </div>
   );
 };

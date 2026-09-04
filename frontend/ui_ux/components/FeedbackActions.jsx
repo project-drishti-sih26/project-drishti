@@ -21,7 +21,7 @@ const FeedbackActions = ({ onFeedback = () => {} }) => {
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
           Case Status Action
         </span>
-        <span className="text-[11px] text-slate-400">Audit Trail</span>
+        <span className="text-xs text-slate-400">Audit Trail</span>
       </div>
 
       {feedbackSuccess ? (

@@ -26,26 +26,26 @@ const CaseFlow = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
       <div className="bg-slate-50 border border-slate-200 rounded-sm p-3">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">01. Victim Account</span>
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">01. Victim Account</span>
         <div className="font-semibold text-slate-900 text-xs mt-1">{victimName}</div>
         <div className="font-mono text-xs text-slate-600 mt-0.5">{victim}</div>
-        <div className="text-[11px] text-slate-500 mt-1">{victimBank}</div>
+        <div className="text-xs text-slate-500 mt-1">{victimBank}</div>
       </div>
 
       <div className="bg-rose-50/60 border border-rose-200 rounded-sm p-3">
-        <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider block">02. Mule Account (Hop 1)</span>
+        <span className="text-xs font-bold text-rose-800 uppercase tracking-wider block">02. Mule Account (Hop 1)</span>
         <div className="font-semibold text-rose-950 text-xs mt-1">{muleName}</div>
         <div className="font-mono text-xs text-rose-800 font-bold mt-0.5">{mule}</div>
-        <div className="text-[11px] text-rose-700 mt-1">{muleBank}</div>
+        <div className="text-xs text-rose-700 mt-1">{muleBank}</div>
       </div>
 
       <div className="bg-slate-100/80 border border-slate-300 rounded-sm p-3">
-        <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">03. Predicted Withdrawal Location</span>
+        <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">03. Predicted Withdrawal Location</span>
         <div className="font-semibold text-slate-900 text-xs mt-1">{predictedAtm}</div>
         {etaLine && (
           <div className="text-xs text-slate-700 font-semibold mt-0.5">{etaLine}</div>
         )}
-        <div className="text-[11px] text-slate-600 mt-1">{assignedPatrol}</div>
+        <div className="text-xs text-slate-600 mt-1">{assignedPatrol}</div>
       </div>
     </div>
   );

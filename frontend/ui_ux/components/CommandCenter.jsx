@@ -15,6 +15,7 @@ import GisDashboard from '../../gis/components/GisDashboard.jsx';
  */
 const CommandCenter = () => {
   const [currentView, setCurrentView] = useState('overview');
+  const [showModelDetails, setShowModelDetails] = useState(false);
   const [isDispatchModalOpen, setIsDispatchModalOpen] = useState(false);
   const [selectedAtmId, setSelectedAtmId] = useState('ATM-091');
   const [secondsRemaining, setSecondsRemaining] = useState(656); // 10m 56s
@@ -338,39 +339,53 @@ const CommandCenter = () => {
           </div>
         </div>
       ) : (
-        <div className={`px-5 py-2 border-b text-[11px] ${liveMeta.isLive
+        <div className={`px-5 py-2 border-b text-xs ${liveMeta.isLive
           ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
           : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
-          <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-x-5 gap-y-1">
-            <span className="font-bold uppercase tracking-widest">
-              {liveMeta.isLive ? '● Live prediction' : '○ Sample case (awaiting live alert)'}
-            </span>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+              <span className="font-bold uppercase tracking-widest">
+                {liveMeta.isLive ? '● Live prediction' : '○ Sample case (awaiting live alert)'}
+              </span>
 
-            {liveMeta.isLive && (
-              <>
-                <span className="font-mono">
-                  Ranker: <strong>{liveMeta.modelUsed || 'unknown'}</strong>
-                </span>
-                <span className="font-mono">
-                  Window: <strong>{liveMeta.windowSource || 'unknown'}</strong>
-                </span>
-                {liveMeta.startIst && liveMeta.endIst && (
-                  <span className="font-mono">
-                    Intercept <strong>{liveMeta.startIst}–{liveMeta.endIst} IST</strong>
-                  </span>
-                )}
-                {liveMeta.candidatesEvaluated != null && (
-                  <span className="font-mono">
-                    {liveMeta.candidatesEvaluated} cash points searched
-                  </span>
-                )}
+              {liveMeta.isLive && (
+                <>
+                  <span>Verified model output</span>
+                  {liveMeta.startIst && liveMeta.endIst && (
+                    <span>
+                      Intercept between <strong>{liveMeta.startIst}</strong> and <strong>{liveMeta.endIst}</strong> IST
+                    </span>
+                  )}
+                  {liveMeta.candidatesEvaluated != null && (
+                    <span><strong>{liveMeta.candidatesEvaluated}</strong> cash points searched</span>
+                  )}
+                  {/* The model names and accuracy figures are what a judge or an
+                      auditor needs, and what a duty officer does not. Keeping
+                      them one click away stops the most valuable strip on the
+                      screen from reading as jargon to its actual user. */}
+                  <button
+                    onClick={() => setShowModelDetails((v) => !v)}
+                    className="underline underline-offset-2 hover:no-underline font-medium cursor-pointer"
+                  >
+                    Model details {showModelDetails ? '▾' : '▸'}
+                  </button>
+                </>
+              )}
+
+              <span className={`ml-auto font-mono ${liveMeta.connected ? 'text-slate-500' : 'text-rose-700 font-bold'}`}>
+                {liveMeta.connected ? 'WS connected' : 'WS disconnected — reconnecting…'}
+              </span>
+            </div>
+
+            {showModelDetails && liveMeta.isLive && (
+              <div className="mt-2 pt-2 border-t border-emerald-200 flex flex-wrap gap-x-5 gap-y-1 font-mono">
+                <span>Ranker: <strong>{liveMeta.modelUsed || 'unknown'}</strong></span>
+                <span>Timing model: <strong>{liveMeta.windowSource || 'unknown'}</strong></span>
                 {typeof liveMeta.top5Mass === 'number' && (
-                  <span className="font-mono">
-                    Top-5 holds {(liveMeta.top5Mass * 100).toFixed(0)}% of probability
-                  </span>
+                  <span>Top-5 holds <strong>{(liveMeta.top5Mass * 100).toFixed(0)}%</strong> of probability</span>
                 )}
                 {liveMeta.scorecard?.top5_hit_rate && (
-                  <span className="font-mono">
+                  <span>
                     Held-out accuracy: Top-1 <strong>{(liveMeta.scorecard.top1_hit_rate * 100).toFixed(1)}%</strong>,
                     Top-5 <strong>{(liveMeta.scorecard.top5_hit_rate * 100).toFixed(1)}%</strong>
                     {liveMeta.scorecard.evaluated_on_queries
@@ -378,12 +393,8 @@ const CommandCenter = () => {
                       : ''}
                   </span>
                 )}
-              </>
+              </div>
             )}
-
-            <span className={`ml-auto font-mono ${liveMeta.connected ? 'text-slate-500' : 'text-rose-700 font-bold'}`}>
-              {liveMeta.connected ? 'WS connected' : 'WS disconnected — reconnecting…'}
-            </span>
           </div>
         </div>
       )}
@@ -401,49 +412,72 @@ const CommandCenter = () => {
                 detectedAtIst: liveMeta.isLive ? activeCase.debit_time : null,
               }}
               onOpenCase={() => setIsDispatchModalOpen(true)}
+              compact
             />
 
-            {/* 4 Metric Cards — illustrative cell-level statistics, not model
-                output. Labelled so nobody reads them as measured results. */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Cell Statistics</h3>
-              <span className="text-[10px] text-slate-400 uppercase tracking-wider">Illustrative — not model output</span>
+            {/*
+              HERO — the two facts that decide an operation: how long is left,
+              and where to send the patrol.
+
+              Both existed before, but the countdown was in the right-hand
+              column and the rank-1 address was a table row, so a new user had
+              to hunt for them. On a dispatch screen they should be the largest
+              objects on the page.
+            */}
+            <div className="bg-white rounded-sm border-2 border-slate-900 overflow-hidden">
+              <div className="grid grid-cols-1 md:grid-cols-3">
+                <div className="bg-slate-900 text-white p-5 flex flex-col justify-center items-center text-center">
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                    Time Remaining
+                  </span>
+                  <div className="text-5xl font-bold font-mono mt-1.5 tabular-nums">
+                    {formatCountdown(secondsRemaining)}
+                  </div>
+                  <span className="text-xs text-slate-400 mt-1.5">
+                    {liveMeta.startIst && liveMeta.endIst
+                      ? `Cash-out window ${liveMeta.startIst}–${liveMeta.endIst} IST`
+                      : 'Until predicted cash-out'}
+                  </span>
+                </div>
+
+                <div className="md:col-span-2 p-5">
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                    Send Patrol To
+                  </span>
+
+                  {atms && atms[0] ? (
+                    <>
+                      <div className="text-xl font-bold text-slate-900 mt-1.5">{atms[0].name}</div>
+                      <div className="text-sm text-slate-600 mt-0.5">{atms[0].location}</div>
+
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 mt-3.5 text-sm text-slate-700">
+                        <span><strong className="text-slate-900">{atms[0].distance}</strong> away</span>
+                        <span><strong className="text-slate-900">{atms[0].eta}</strong> by road</span>
+                        <span><strong className="text-slate-900">{atms[0].probability}</strong> likelihood</span>
+                        {atms[0].risk_tier && (
+                          <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm bg-rose-50 text-rose-800 border border-rose-200">
+                            {atms[0].risk_tier}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => setIsDispatchModalOpen(true)}
+                        className="mt-4 px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-semibold text-sm rounded-sm transition-colors cursor-pointer"
+                      >
+                        Generate Dispatch Order
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-sm text-slate-500 mt-2">
+                      No ranked target yet — awaiting a live alert.
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
-                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Active Cases</span>
-                <div className="mt-1.5 flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-slate-900 font-mono">4</span>
-                  <span className="text-xs text-rose-700 font-medium">2 Pending Dispatch</span>
-                </div>
-              </div>
 
-              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
-                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Total Defrauded Amount</span>
-                <div className="mt-1.5 flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-slate-900 font-mono">₹42.8 L</span>
-                  <span className="text-xs text-slate-500">6 flagged accounts</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
-                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Cases Resolved This Month</span>
-                <div className="mt-1.5 flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-slate-900 font-mono">18</span>
-                  <span className="text-xs text-slate-700 font-medium">₹31.4L Restricted</span>
-                </div>
-              </div>
-
-              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
-                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Patrol Units on Duty</span>
-                <div className="mt-1.5 flex items-baseline justify-between">
-                  <span className="text-2xl font-bold text-slate-900 font-mono">8</span>
-                  <span className="text-xs text-slate-600 font-medium">PCR Unit 12 Closest</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Main Section */}
+            {/* Main Section — the money trail, the map, and the ranked list */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               <div className="lg:col-span-8 space-y-5">
                 <SidebarLeft caseData={activeCase} />
@@ -464,8 +498,52 @@ const CommandCenter = () => {
                   selectedAtmId={selectedAtmId}
                   onSelectAtm={handleSelectAtm}
                   predictedAtms={atms}
+                  showCountdown={false}
                   onFeedback={handleFeedback}
                 />
+              </div>
+            </div>
+
+            {/* Illustrative cell-level context. Deliberately BELOW the case,
+                the map and the ranked list: a new user reading top-to-bottom
+                should reach real model output before sample statistics. */}
+            <div className="flex items-center justify-between pt-1">
+              <h3 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cell Summary</h3>
+              <span className="text-xs text-slate-400 uppercase tracking-wider">Illustrative — not model output</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-xs font-medium text-slate-500 block uppercase tracking-wider">Active Cases</span>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  <span className="text-2xl font-bold text-slate-900 font-mono">4</span>
+                  <span className="text-xs text-rose-700 font-medium text-right">2 Pending Dispatch</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-xs font-medium text-slate-500 block uppercase tracking-wider">Total Defrauded Amount</span>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  {/* Wrapped onto two lines at narrower column widths, which
+                      read as a broken layout. */}
+                  <span className="text-2xl font-bold text-slate-900 font-mono whitespace-nowrap">₹42.8L</span>
+                  <span className="text-xs text-slate-500 text-right">6 flagged accounts</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-xs font-medium text-slate-500 block uppercase tracking-wider">Cases Resolved This Month</span>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  <span className="text-2xl font-bold text-slate-900 font-mono">18</span>
+                  <span className="text-xs text-slate-700 font-medium text-right whitespace-nowrap">₹31.4L Restricted</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-xs font-medium text-slate-500 block uppercase tracking-wider">Patrol Units on Duty</span>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  <span className="text-2xl font-bold text-slate-900 font-mono">8</span>
+                  <span className="text-xs text-slate-600 font-medium text-right">PCR Unit 12 Closest</span>
+                </div>
               </div>
             </div>
 
@@ -480,7 +558,7 @@ const CommandCenter = () => {
                   {/* Hardcoded distribution below — a sample caseload shape, not
                       a count of anything this system observed. Labelled so it
                       cannot be read as a measured result. */}
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">Illustrative — not model output</span>
+                  <span className="text-xs text-slate-400 uppercase tracking-wider">Illustrative — not model output</span>
                 </div>
 
                 <div className="h-40 flex items-end justify-between gap-2 pt-4 px-2 border-b border-slate-100">
@@ -499,7 +577,7 @@ const CommandCenter = () => {
                     { time: '22:00', count: 9 },
                   ].map((item, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                      <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-xs font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
                         {item.count}
                       </span>
                       <div
@@ -508,7 +586,7 @@ const CommandCenter = () => {
                         }`}
                         style={{ height: `${Math.max(item.count * 10, 6)}%` }}
                       />
-                      <span className="text-[10px] font-mono text-slate-500 mt-1">{item.time}</span>
+                      <span className="text-xs font-mono text-slate-500 mt-1">{item.time}</span>
                     </div>
                   ))}
                 </div>
@@ -520,7 +598,7 @@ const CommandCenter = () => {
                     <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Fraud Category Distribution</h3>
                     <p className="text-xs text-slate-500">Breakdown of reported incident vectors</p>
                   </div>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider text-right shrink-0">Illustrative</span>
+                  <span className="text-xs text-slate-400 uppercase tracking-wider text-right shrink-0">Illustrative</span>
                 </div>
 
                 <div className="space-y-3 pt-1">
@@ -550,7 +628,7 @@ const CommandCenter = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-white px-4 py-3 rounded-sm border border-slate-200">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Tactical Spatial GIS Command Center</h2>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Map — Predicted Cash-Out Locations</h2>
                 <p className="text-xs text-slate-500">Live Spatio-Temporal Prediction Radar & Uber H3 Hexagonal Danger Heatmap</p>
               </div>
               <div className="flex items-center gap-2">
@@ -637,7 +715,7 @@ const CommandCenter = () => {
                     { time: '22:00', count: 9 },
                   ].map((item, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                      <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-xs font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
                         {item.count}
                       </span>
                       <div
@@ -646,7 +724,7 @@ const CommandCenter = () => {
                         }`}
                         style={{ height: `${Math.max(item.count * 10, 6)}%` }}
                       />
-                      <span className="text-[10px] font-mono text-slate-500 mt-1">{item.time}</span>
+                      <span className="text-xs font-mono text-slate-500 mt-1">{item.time}</span>
                     </div>
                   ))}
                 </div>

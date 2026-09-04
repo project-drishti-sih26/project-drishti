@@ -151,7 +151,7 @@ const Header = ({
                   onClearNotifications();
                   setIsNotificationOpen(false);
                 }}
-                className="text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer font-normal"
+                className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer font-normal"
               >
                 Mark all read
               </button>
@@ -171,9 +171,9 @@ const Header = ({
                     <span className={`font-medium ${n.urgent ? 'text-rose-700' : 'text-slate-900'}`}>
                       {n.title}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">{n.time}</span>
+                    <span className="text-xs text-slate-400 font-mono">{n.time}</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 font-normal leading-tight">
+                  <p className="text-xs text-slate-600 font-normal leading-tight">
                     {n.desc}
                   </p>
                 </div>

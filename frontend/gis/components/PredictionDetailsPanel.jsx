@@ -68,7 +68,7 @@ export const PredictionDetailsPanel = ({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span
-              className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wide border ${
+              className={`px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wide border ${
                 rank === 1
                   ? 'bg-red-500/30 text-red-400 border-red-500/60 shadow-[0_0_8px_rgba(239,68,68,0.4)]'
                   : rank <= 3
@@ -78,7 +78,7 @@ export const PredictionDetailsPanel = ({
             >
               RANK #{rank}
             </span>
-            <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded border ${typeBadge.bg}`}>
+            <span className={`text-xs font-mono font-semibold px-2 py-0.5 rounded border ${typeBadge.bg}`}>
               {typeBadge.label}
             </span>
           </div>
@@ -86,7 +86,7 @@ export const PredictionDetailsPanel = ({
             {selectedTarget.name || 'Predicted Target Node'}
           </h4>
           {selectedTarget.address && (
-            <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">
+            <p className="text-xs text-slate-400 mt-0.5 leading-snug">
               📍 {selectedTarget.address}
             </p>
           )}
@@ -102,7 +102,7 @@ export const PredictionDetailsPanel = ({
           }`}>
             {scorePercent !== null ? `${scorePercent}%` : '—'}
           </div>
-          <div className="text-[9px] font-mono text-slate-400 uppercase tracking-tight mt-0.5">
+          <div className="text-xs font-mono text-slate-400 uppercase tracking-tight mt-0.5">
             {tier ? `${tier} risk` : 'Cash-out prob.'}
           </div>
         </div>
@@ -111,13 +111,13 @@ export const PredictionDetailsPanel = ({
       {/* Spatio-Temporal Metrics Grid */}
       <div className="grid grid-cols-2 gap-2 text-xs font-mono">
         <div className="bg-slate-900/70 p-2 rounded-lg border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase block">Expected Cash-Out</span>
+          <span className="text-xs text-slate-400 uppercase block">Expected Cash-Out</span>
           <span className="font-bold text-cyan-300 text-xs mt-0.5 block">
             {withdrawalWindow ? `⏱ ${withdrawalWindow}` : <span className="text-slate-500">not predicted</span>}
           </span>
         </div>
         <div className="bg-slate-900/70 p-2 rounded-lg border border-slate-800">
-          <span className="text-[10px] text-slate-400 uppercase block">Estimated Travel ETA</span>
+          <span className="text-xs text-slate-400 uppercase block">Estimated Travel ETA</span>
           <span className="font-bold text-amber-300 text-xs mt-0.5 block">
             {travelTime ? `🚗 ~${travelTime}` : <span className="text-slate-500">unavailable</span>}
           </span>
@@ -126,11 +126,11 @@ export const PredictionDetailsPanel = ({
 
       {/* "Why This Location?" ML Reasoning Section */}
       <div className="space-y-1.5 pt-1">
-        <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold uppercase tracking-wider text-cyan-400">
+        <div className="flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-cyan-400">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
           <span>Why This Location?</span>
         </div>
-        <ul className="space-y-1 text-[11px] text-slate-300 font-sans leading-snug">
+        <ul className="space-y-1 text-xs text-slate-300 font-sans leading-snug">
           {explanations.length > 0 ? explanations.map((reason, idx) => (
             <li key={idx} className="flex items-start gap-1.5 bg-slate-900/40 p-1.5 rounded border border-slate-800/80">
               <span className="text-cyan-400 text-xs mt-[-1px] font-mono">▸</span>

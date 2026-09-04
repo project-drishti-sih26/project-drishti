@@ -42,7 +42,7 @@ const OverviewView = ({
           onClick={() => onSelectView('cases')}
           className="bg-white p-3.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors cursor-pointer"
         >
-          <span className="text-[11px] font-normal text-slate-500 block uppercase tracking-wide">
+          <span className="text-xs font-normal text-slate-500 block uppercase tracking-wide">
             Total Cases
           </span>
           <div className="mt-1.5 flex items-baseline justify-between">
@@ -54,7 +54,7 @@ const OverviewView = ({
         </div>
 
         <div className="bg-white p-3.5 rounded-[4px] border border-slate-200">
-          <span className="text-[11px] font-normal text-slate-500 block uppercase tracking-wide">
+          <span className="text-xs font-normal text-slate-500 block uppercase tracking-wide">
             Urgent Cases
           </span>
           <div className="mt-1.5 flex items-baseline justify-between">
@@ -66,7 +66,7 @@ const OverviewView = ({
         </div>
 
         <div className="bg-white p-3.5 rounded-[4px] border border-slate-200">
-          <span className="text-[11px] font-normal text-slate-500 block uppercase tracking-wide">
+          <span className="text-xs font-normal text-slate-500 block uppercase tracking-wide">
             Cases Resolved
           </span>
           <div className="mt-1.5 flex items-baseline justify-between">
@@ -76,7 +76,7 @@ const OverviewView = ({
         </div>
 
         <div className="bg-white p-3.5 rounded-[4px] border border-slate-200">
-          <span className="text-[11px] font-normal text-slate-500 block uppercase tracking-wide">
+          <span className="text-xs font-normal text-slate-500 block uppercase tracking-wide">
             Patrol Units
           </span>
           <div className="mt-1.5 flex items-baseline justify-between">
@@ -91,7 +91,7 @@ const OverviewView = ({
         <div className="bg-rose-50/70 border border-rose-200 rounded-[4px] p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono font-medium px-1.5 py-0.5 rounded-[3px] bg-rose-100 text-rose-800 border border-rose-200">
+              <span className="text-xs font-mono font-medium px-1.5 py-0.5 rounded-[3px] bg-rose-100 text-rose-800 border border-rose-200">
                 Priority Alert • {mostUrgentCase.case_id}
               </span>
               <span className="text-xs text-slate-500 font-mono font-normal">
@@ -125,7 +125,7 @@ const OverviewView = ({
             <h2 className="text-xs font-medium text-slate-900 uppercase">
               Active Incidents Queue
             </h2>
-            <p className="text-[11px] text-slate-400 font-normal">
+            <p className="text-xs text-slate-400 font-normal">
               Active and monitoring cases requiring field intervention
             </p>
           </div>
@@ -136,7 +136,7 @@ const OverviewView = ({
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-normal text-[11px]">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-normal text-xs">
               <tr>
                 <th className="py-2 px-3">Case ID</th>
                 <th className="py-2 px-3">Victim</th>
@@ -162,13 +162,13 @@ const OverviewView = ({
                   {/* Victim */}
                   <td className="py-2.5 px-3">
                     <div className="font-medium text-slate-900">{c.victim_name}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">{c.victim_account}</div>
+                    <div className="text-xs text-slate-500 font-mono">{c.victim_account}</div>
                   </td>
 
                   {/* Mule */}
                   <td className="py-2.5 px-3">
                     <div className="font-medium text-slate-900">{c.mule_name}</div>
-                    <div className="text-[11px] text-slate-500 font-mono">{c.mule_account}</div>
+                    <div className="text-xs text-slate-500 font-mono">{c.mule_account}</div>
                   </td>
 
                   {/* Amount */}
@@ -178,7 +178,7 @@ const OverviewView = ({
 
                   {/* Status */}
                   <td className="py-2.5 px-3">
-                    <span className={`inline-block text-[11px] font-mono leading-none px-1.5 py-0.5 rounded-[3px] border ${getStatusBadge(c.status)}`}>
+                    <span className={`inline-block text-xs font-mono leading-none px-1.5 py-0.5 rounded-[3px] border ${getStatusBadge(c.status)}`}>
                       {c.status}
                     </span>
                   </td>
@@ -186,7 +186,7 @@ const OverviewView = ({
                   {/* Time / Target Node */}
                   <td className="py-2.5 px-3">
                     <div className="text-slate-800 font-normal">{c.debit_time}</div>
-                    <div className="text-[11px] text-slate-400 truncate max-w-[180px]">
+                    <div className="text-xs text-slate-400 truncate max-w-[180px]">
                       {c.predicted_atm.split(',')[0]}
                     </div>
                   </td>
@@ -195,7 +195,7 @@ const OverviewView = ({
                   <td className="py-2.5 px-3 text-right" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => onViewCase(c.case_id)}
-                      className="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-white font-medium text-[11px] rounded-[3px] transition-colors cursor-pointer"
+                      className="px-2 py-1 bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs rounded-[3px] transition-colors cursor-pointer"
                     >
                       View
                     </button>
@@ -237,7 +237,7 @@ const OverviewView = ({
               { time: '22:00', count: 9 },
             ].map((item, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end group">
-                <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
                   {item.count}
                 </span>
                 <div
@@ -246,7 +246,7 @@ const OverviewView = ({
                   }`}
                   style={{ height: `${Math.max(item.count * 10, 5)}%` }}
                 />
-                <span className="text-[10px] font-mono text-slate-400 mt-1">{item.time}</span>
+                <span className="text-xs font-mono text-slate-400 mt-1">{item.time}</span>
               </div>
             ))}
           </div>
@@ -271,7 +271,7 @@ const OverviewView = ({
               <div key={i} className="space-y-1">
                 <div className="flex justify-between text-xs font-normal">
                   <span className="text-slate-700">{type.label}</span>
-                  <span className="text-slate-400 font-mono text-[11px]">{type.pct}%</span>
+                  <span className="text-slate-400 font-mono text-xs">{type.pct}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 rounded-[2px] overflow-hidden">
                   <div className={`h-full ${type.color}`} style={{ width: `${type.pct}%` }} />

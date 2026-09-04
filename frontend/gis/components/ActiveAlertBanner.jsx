@@ -54,7 +54,7 @@ export const ActiveAlertBanner = ({
             <span className="font-mono font-bold text-xs text-red-400 uppercase tracking-wide">
               {alertId}
             </span>
-            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border font-bold ${tierStyle}`}>
+            <span className={`text-xs font-mono px-1.5 py-0.5 rounded border font-bold ${tierStyle}`}>
               {degraded
                 ? 'DEGRADED — HEURISTIC, NOT A PREDICTION'
                 : `${topTier || 'CASH-OUT'} RISK${scorePercent !== null ? ` (${scorePercent}%)` : ''}`}
@@ -68,8 +68,8 @@ export const ActiveAlertBanner = ({
 
       {/* Right: Withdrawal Window & Action Button */}
       <div className="flex items-center gap-2.5 flex-shrink-0">
-        <div className="hidden sm:block text-right font-mono text-[11px] pr-2 border-r border-slate-800">
-          <span className="text-slate-400 block text-[9px] uppercase">Window</span>
+        <div className="hidden sm:block text-right font-mono text-xs pr-2 border-r border-slate-800">
+          <span className="text-slate-400 block text-xs uppercase">Window</span>
           <span className="text-amber-300 font-bold">
             {withdrawalWindow || <span className="text-slate-500">not predicted</span>}
           </span>

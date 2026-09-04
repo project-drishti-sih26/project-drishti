@@ -30,7 +30,7 @@ export const renderCustomMarker = (location, rank = 1, isSelected = false) => {
   el.innerHTML = `
     <div class="relative flex flex-col items-center">
       <!-- Flat Hard-edged Solid Rank Marker -->
-      <div class="w-6 h-6 rounded-[3px] flex items-center justify-center font-mono font-medium text-[11px] ${bgClasses} ${selectedRing}">
+      <div class="w-6 h-6 rounded-[3px] flex items-center justify-center font-mono font-medium text-xs ${bgClasses} ${selectedRing}">
         #${rank}
       </div>
       <!-- Pointer Tip -->
