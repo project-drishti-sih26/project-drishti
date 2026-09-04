@@ -32,11 +32,16 @@ export const TopTargetsPanel = ({
     return { label: 'ATM', bg: 'bg-red-500/20 text-red-400 border-red-500/40' };
   };
 
-  // Risk percentage color resolver
-  const getRiskColor = (score) => {
-    const s = Number(score) || 0;
-    if (s >= 0.85) return 'text-red-400 font-bold';
-    if (s >= 0.70) return 'text-amber-400 font-bold';
+  // Risk colour resolver. Keyed on the engine's tier rather than on raw
+  // percentage cut-offs: these are calibrated probabilities over ~170
+  // candidates, where the top pick is CRITICAL at ~44%. An 0.85 threshold would
+  // paint every genuine alert cyan.
+  const getRiskColor = (target) => {
+    const tier = String(target?.riskTier || '').toUpperCase();
+    if (tier === 'CRITICAL') return 'text-red-400 font-bold';
+    if (tier === 'HIGH') return 'text-amber-400 font-bold';
+    if (tier === 'MEDIUM') return 'text-yellow-300';
+    if (tier === 'LOW') return 'text-emerald-400';
     return 'text-cyan-400';
   };
 
@@ -61,7 +66,8 @@ export const TopTargetsPanel = ({
           const rank = target.rank || idx + 1;
           const isSelected = selectedTargetId === target.id;
           const badge = getTypeBadge(target.type);
-          const scorePercent = Math.round((target.riskScore || target.score || 0) * 100);
+          const hasScore = typeof target.riskScore === 'number' && target.hasRealScore !== false;
+          const scorePercent = target.scorePercent ?? (hasScore ? Math.round(target.riskScore * 100) : null);
 
           return (
             <button
@@ -111,11 +117,11 @@ export const TopTargetsPanel = ({
 
               {/* Right: Risk Probability */}
               <div className="text-right flex-shrink-0">
-                <div className={`text-xs font-mono ${getRiskColor(target.riskScore || target.score)}`}>
-                  {scorePercent}%
+                <div className={`text-xs font-mono ${getRiskColor(target)}`}>
+                  {scorePercent !== null ? `${scorePercent}%` : '—'}
                 </div>
                 <div className="text-[9px] font-mono text-slate-500 uppercase">
-                  Risk
+                  {target.riskTier || 'Risk'}
                 </div>
               </div>
             </button>

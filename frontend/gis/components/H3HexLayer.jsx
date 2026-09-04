@@ -30,10 +30,10 @@ export const getRiskTierColor = (tierOrScore) => {
   }
 
   const score = Number(tierOrScore) || 0;
-  if (score >= 0.90) return '#ef4444'; // Critical (>= 90%)
-  if (score >= 0.75) return '#f59e0b'; // High (75% - 89%)
-  if (score >= 0.60) return '#eab308'; // Medium (60% - 74%)
-  return '#10b981';                    // Low (< 60%)
+  if (score >= 0.30) return '#ef4444'; // Critical
+  if (score >= 0.15) return '#f59e0b'; // High
+  if (score >= 0.06) return '#eab308'; // Medium
+  return '#10b981';                    // Low
 };
 
 /**
@@ -105,8 +105,12 @@ export const buildH3GeoJson = (items = []) => {
     const coordinates = getH3BoundaryCoordinates(h3Index, lat, lng);
     if (!coordinates || coordinates.length < 4) return;
 
-    const score = Number(item.riskScore ?? item.score ?? 0.75);
-    const riskTier = item.riskTier || item.risk_tier || (score >= 0.9 ? 'CRITICAL' : score >= 0.75 ? 'HIGH' : score >= 0.6 ? 'MEDIUM' : 'LOW');
+    const score = Number(item.riskScore ?? item.score ?? 0);
+    // Thresholds match the ML engine's `_risk_tier`, which cuts on a CALIBRATED
+    // probability over ~170 candidates — there the top pick is CRITICAL at
+    // ~44%, so a 0.90 cut-off would colour every real alert green.
+    const riskTier = item.riskTier || item.risk_tier
+      || (score >= 0.30 ? 'CRITICAL' : score >= 0.15 ? 'HIGH' : score >= 0.06 ? 'MEDIUM' : 'LOW');
     const color = getRiskTierColor(riskTier);
 
     features.push({

@@ -27,15 +27,25 @@ export const normalizeTargetLocation = (rawLoc = {}, fallbackRank = 1) => {
     latitude >= -90 && latitude <= 90 &&
     longitude >= -180 && longitude <= 180;
 
-  // Resolve risk score (0.0 to 1.0 or 0 to 100)
-  let rawScore = rawLoc.riskScore ?? rawLoc.risk_score ?? rawLoc.score ?? rawLoc.probability ?? 0.75;
-  let riskScore = Number(rawScore);
-  if (isNaN(riskScore)) riskScore = 0.75;
+  // Resolve risk score (0.0 to 1.0 or 0 to 100).
+  //
+  // `confidence_score` / `probability_pct` are what the ML engine actually
+  // emits per ATM. Neither was in this list, so EVERY live target fell through
+  // to the 0.75 default: the map painted all five hexagons the same amber and
+  // the details panel read "75%" for a target the model had scored at 4%.
+  // Worse, `risk_tier` below WAS read correctly, so a target could render as
+  // CRITICAL and 75% simultaneously.
+  let rawScore = rawLoc.confidence_score ?? rawLoc.riskScore ?? rawLoc.risk_score ??
+    rawLoc.probability_pct ?? rawLoc.score ?? rawLoc.probability ?? null;
+  const hasRealScore = rawScore !== null && rawScore !== undefined && !isNaN(Number(rawScore));
+  let riskScore = hasRealScore ? Number(rawScore) : 0;
   if (riskScore > 1.0) riskScore = riskScore / 100.0; // convert 0-100 scale to 0.0-1.0
   riskScore = Math.min(Math.max(riskScore, 0), 1.0);
 
-  // Resolve target type (ATM, Bank Branch, BC Point)
-  let type = String(rawLoc.type ?? rawLoc.target_type ?? rawLoc.category ?? 'ATM').trim();
+  // Resolve target type (ATM, Bank Branch, BC Point).
+  // `location_type` is the field the ML engine emits; without it every live
+  // target, including bank branches and BC points, was labelled "ATM".
+  let type = String(rawLoc.location_type ?? rawLoc.type ?? rawLoc.target_type ?? rawLoc.category ?? 'ATM').trim();
   const lowerType = type.toLowerCase();
   if (lowerType.includes('branch') || lowerType.includes('bank') && !lowerType.includes('atm')) {
     type = 'Bank Branch';
@@ -45,16 +55,24 @@ export const normalizeTargetLocation = (rawLoc = {}, fallbackRank = 1) => {
     type = 'ATM';
   }
 
-  // Risk Tier calculation
+  // Risk Tier. Prefer the backend's own tier — it is cut on the calibrated
+  // probability scale, where the top pick of ~170 candidates is CRITICAL at
+  // ~44%, not at 90%. The local thresholds below mirror the engine's
+  // `_risk_tier` so a fallback classification agrees with a served one.
   let riskTier = rawLoc.riskTier || rawLoc.risk_tier;
   if (!riskTier) {
-    if (riskScore >= 0.90) riskTier = 'CRITICAL';
-    else if (riskScore >= 0.75) riskTier = 'HIGH';
-    else if (riskScore >= 0.60) riskTier = 'MEDIUM';
+    if (riskScore >= 0.30) riskTier = 'CRITICAL';
+    else if (riskScore >= 0.15) riskTier = 'HIGH';
+    else if (riskScore >= 0.06) riskTier = 'MEDIUM';
     else riskTier = 'LOW';
   }
 
   const rank = Number(rawLoc.rank ?? fallbackRank);
+
+  // Travel time. `travel_time_mins` / `patrol_eta_mins` are the engine's real
+  // fields — absent from the old list, so the tactical panel showed no ETA at
+  // all on live alerts, which is the one number a dispatcher needs most.
+  const etaMins = rawLoc.travel_time_mins ?? rawLoc.patrol_eta_mins ?? rawLoc.eta_minutes ?? null;
 
   return {
     id: String(rawLoc.location_id ?? rawLoc.id ?? rawLoc.target_id ?? rawLoc.code ?? `target-${rank}`),
@@ -65,15 +83,25 @@ export const normalizeTargetLocation = (rawLoc = {}, fallbackRank = 1) => {
     hasValidCoords: hasValidCoords,
     h3Index: rawLoc.h3Index ?? rawLoc.h3_index ?? null,
     riskScore: riskScore,
-    scorePercent: Math.round(riskScore * 100),
+    hasRealScore: hasRealScore,
+    scorePercent: hasRealScore ? Math.round(riskScore * 100) : null,
     rank: isNaN(rank) ? fallbackRank : rank,
     address: rawLoc.address ?? rawLoc.location_address ?? 'Location address unavailable',
-    travelTime: rawLoc.travelTime ?? rawLoc.travel_time ?? (rawLoc.eta_minutes ? `${rawLoc.eta_minutes} mins` : null),
+    distanceKm: rawLoc.distance_km ?? rawLoc.distanceKm ?? null,
+    historicalFraudCount: rawLoc.historical_fraud_count ?? null,
+    explanation: rawLoc.explanation ?? null,
+    travelTime: rawLoc.travelTime ?? rawLoc.travel_time
+      ?? (etaMins !== null && !isNaN(Number(etaMins)) ? `${Math.round(Number(etaMins))} mins` : null),
+    // The interception window is a property of the CASE (one survival-model
+    // prediction), not of an individual ATM. Inventing a per-target
+    // "15-30 mins" implied five separate predictions that were never made.
     expectedWindow: (typeof rawLoc.expectedWindow === 'object' && rawLoc.expectedWindow !== null)
       ? `${rawLoc.expectedWindow.min ?? 10}–${rawLoc.expectedWindow.max ?? 25} mins`
       : (typeof rawLoc.withdrawal_window === 'object' && rawLoc.withdrawal_window !== null)
       ? `${rawLoc.withdrawal_window.min ?? 10}–${rawLoc.withdrawal_window.max ?? 25} mins`
-      : (typeof rawLoc.expectedWindow === 'string' ? rawLoc.expectedWindow : (typeof rawLoc.withdrawal_window === 'string' ? rawLoc.withdrawal_window : (rawLoc.window_min && rawLoc.window_max ? `${rawLoc.window_min}–${rawLoc.window_max} mins` : '15–30 mins'))),
+      : (typeof rawLoc.expectedWindow === 'string' ? rawLoc.expectedWindow
+        : (typeof rawLoc.withdrawal_window === 'string' ? rawLoc.withdrawal_window
+          : (rawLoc.window_min && rawLoc.window_max ? `${rawLoc.window_min}–${rawLoc.window_max} mins` : null))),
     riskTier: riskTier.toUpperCase(),
     raw: rawLoc
   };
@@ -129,11 +157,20 @@ export const normalizeAlertData = (rawAlert = {}) => {
   }).filter((c) => c.h3Index);
 
   // Withdrawal time window formatting
-  let withdrawalWindow = '20–45 mins';
+  let withdrawalWindow = null;
   if (typeof rawAlert.time_window === 'object' && rawAlert.time_window !== null) {
-    const mins = rawAlert.time_window.minutes_from_now ?? 25;
-    const endTime = rawAlert.time_window.end ? (rawAlert.time_window.end.includes('T') ? rawAlert.time_window.end.split('T')[1].slice(0, 5) : rawAlert.time_window.end) : null;
-    withdrawalWindow = endTime ? `${mins} mins (until ${endTime})` : `${mins} mins`;
+    const tw = rawAlert.time_window;
+    const mins = tw.minutes_from_now;
+    // start_ist / end_ist are pre-formatted IST by the engine. Parsing `.end`
+    // and slicing the ISO string yields UTC, which is an hour-and-a-half wrong
+    // on an officer's screen.
+    if (tw.start_ist && tw.end_ist) {
+      withdrawalWindow = typeof mins === 'number'
+        ? `${tw.start_ist}–${tw.end_ist} IST (in ${mins} min)`
+        : `${tw.start_ist}–${tw.end_ist} IST`;
+    } else if (typeof mins === 'number') {
+      withdrawalWindow = `${mins} mins`;
+    }
   } else if (typeof rawAlert.withdrawal_window === 'object' && rawAlert.withdrawal_window !== null) {
     const min = rawAlert.withdrawal_window.min ?? rawAlert.withdrawal_window.minimum ?? 15;
     const max = rawAlert.withdrawal_window.max ?? rawAlert.withdrawal_window.maximum ?? 45;
@@ -142,7 +179,15 @@ export const normalizeAlertData = (rawAlert = {}) => {
     withdrawalWindow = rawAlert.withdrawal_window;
   }
 
-  // Explanations / SHAP reasons
+  // Explanations / SHAP reasons.
+  //
+  // The engine attaches a SHAP-derived explanation to EACH ranked target; there
+  // is no alert-level explanation field. This block used to fall through to
+  // three hardcoded strings ("High proximity to recent mule account
+  // activity", ...) — generic text that looks exactly like model output and
+  // appears on every live alert regardless of what the model actually found.
+  // Fabricated reasoning on a dispatch screen is the worst failure this UI can
+  // have, so the real per-target attributions are lifted instead.
   let explanation = [];
   if (Array.isArray(rawAlert.explanation)) {
     explanation = rawAlert.explanation.map(String);
@@ -151,12 +196,18 @@ export const normalizeAlertData = (rawAlert = {}) => {
   } else if (typeof rawAlert.explanation === 'string') {
     explanation = [rawAlert.explanation];
   } else {
-    explanation = [
-      'High proximity to recent mule account activity',
-      'Historical cash withdrawal velocity anomaly',
-      'Optimal road-network travel corridor match'
-    ];
+    explanation = targets
+      .map((t) => t.explanation)
+      .filter((e) => typeof e === 'string' && e.length > 0);
   }
+
+  // Origin = the mule's last known location, as sent by the engine. Defaulting
+  // to fixed coordinates put the origin marker and every distance ring drawn
+  // from it in the wrong place whenever the field name did not match.
+  const originLat = Number(rawAlert.mule_last_latitude ?? rawAlert.origin_lat ?? rawAlert.originLatitude ?? NaN);
+  const originLng = Number(rawAlert.mule_last_longitude ?? rawAlert.origin_lng ?? rawAlert.originLongitude ?? NaN);
+  const originKnown = !isNaN(originLat) && !isNaN(originLng) &&
+    (rawAlert.mule_location_known !== false);
 
   return {
     alertId,
@@ -164,13 +215,28 @@ export const normalizeAlertData = (rawAlert = {}) => {
     muleAccount: rawAlert.mule_account_id || rawAlert.mule_account || rawAlert.muleAccount || 'XXXX-XXXX-8821',
     defraudedAmount: rawAlert.compromised_amount ? `₹ ${Number(rawAlert.compromised_amount).toLocaleString('en-IN')}` : (rawAlert.defrauded_amount || rawAlert.amount || '₹ 1,50,000'),
     incidentTimestamp: rawAlert.detected_at || rawAlert.incident_timestamp || rawAlert.timestamp || new Date().toISOString(),
-    riskScore: Number(rawAlert.risk_score ?? rawAlert.riskScore ?? 0.92),
+    detectedAtIst: rawAlert.detected_at_ist || null,
+    // Alert-level confidence = the calibrated probability of the top-ranked
+    // target. The old 0.92 default was a number no model ever produced.
+    riskScore: Number(
+      rawAlert.risk_score ?? rawAlert.riskScore ?? (targets[0] ? targets[0].riskScore : 0)
+    ),
     withdrawalWindow,
+    windowSource: (typeof rawAlert.time_window === 'object' && rawAlert.time_window)
+      ? rawAlert.time_window.model_source || null : null,
+    modelUsed: rawAlert.model_used || null,
+    // Surfaced so the GIS view can refuse to present a heuristic as a prediction.
+    degraded: rawAlert.degraded === true,
+    degradedReason: rawAlert.degraded_reason || null,
+    totalCandidatesEvaluated: rawAlert.total_candidates_evaluated ?? null,
+    top5ProbabilityMass: rawAlert.top5_probability_mass ?? null,
+    modelScorecard: rawAlert.model_scorecard || null,
     targets,
     riskCells,
     explanation,
-    originLat: Number(rawAlert.origin_lat ?? rawAlert.originLatitude ?? 28.6289),
-    originLng: Number(rawAlert.origin_lng ?? rawAlert.originLongitude ?? 77.2065),
+    originKnown,
+    originLat: originKnown ? originLat : 28.6289,
+    originLng: originKnown ? originLng : 77.2065,
     raw: rawAlert
   };
 };

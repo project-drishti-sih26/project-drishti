@@ -81,6 +81,16 @@ class TransactionCreate(BaseModel):
     account_type: Optional[str] = None
     last_known_lat: Optional[float] = None
     last_known_lon: Optional[float] = None
+    # Links the resulting alert back to an existing investigation. When absent
+    # the trigger service derives one from tx_id so the audit trail is never
+    # broken by a randomly generated case number.
+    case_id: Optional[str] = None
+
+    @validator("amount")
+    def amount_must_be_positive(cls, v):
+        if v is None or v <= 0:
+            raise ValueError("Transaction amount must be positive")
+        return v
 
 class TransactionResponse(BaseModel):
     status: str

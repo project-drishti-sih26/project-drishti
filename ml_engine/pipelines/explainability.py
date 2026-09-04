@@ -3,103 +3,132 @@ Project Drishti — ML Engine
 File: ml_engine/pipelines/explainability.py
 Role: Role 2 — ML/AI Engineer
 
-Converts ML scores and feature values into plain-English explanation
-strings for police dispatch. No black boxes — every prediction comes
-with a human-readable reason.
+Turns model output into a dispatch justification an officer can act on and a
+supervisor can audit. Nothing in this system is allowed to say "the model said
+so" — a patrol deployment based on an unexplained score is not defensible.
 
-Phase 1: Template-based explanations (immediate, no SHAP needed).
-Phase 2: Real SHAP values when LightGBM model is trained.
+Phase 1: Template explanations (works with zero dependencies).
+Phase 2: SHAP TreeExplainer attributions when LambdaMART is live.
+
+TWO BUGS THIS MODULE USED TO HAVE, BOTH WORTH UNDERSTANDING
+-----------------------------------------------------------
+1. It read feature values with `candidate.get("mule_network_affinity")`. Those
+   features live in the FEATURE VECTOR, not on the candidate dict, so the lookup
+   always returned the 0 default and printed "used by 0 linked mule accounts" as
+   a reason to send a patrol. Values are now read positionally from the same
+   feature matrix SHAP was computed on, so the text cannot drift from the model.
+
+2. It phrased any positive SHAP attribution as supporting evidence, even when
+   the underlying feature value was 0. "0 prior frauds" is not a reason to go
+   somewhere. Count-like features are now suppressed unless their value is
+   actually non-zero — an explanation that cites non-evidence is worse than no
+   explanation, because it manufactures false confidence.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
+# TreeExplainer construction walks the whole booster, which is pure overhead to
+# repeat per alert when the model never changes between requests. Cached by model
+# identity so a retrain-and-reload still builds a fresh explainer.
+_explainer_cache: Dict[int, Any] = {}
 
 
-# ─── Feature → Human-readable phrase lookup ───────────────────────────────────
-FEATURE_PHRASES = {
-    "travel_time_mins": "~{val:.0f}-min road travel time",
-    "distance_km": "{val:.1f} km road distance",
-    "historical_fraud_count": "{val:.0f} prior fraud incident(s) recorded at this ATM",
-    "mule_atm_affinity": "previously used by this mule in {val:.0f} prior fraud(s)",
-    "mule_network_affinity": "used by {val:.0f} linked mule account(s) in this network",
-    "h3_fraud_density": "high crime concentration in surrounding area",
-    "is_weekend": "weekend timing pattern (higher mule activity)",
+def _get_explainer(model):
+    key = id(model)
+    if key not in _explainer_cache:
+        import shap
+        _explainer_cache[key] = shap.TreeExplainer(model)
+        print("[Explainability] SHAP TreeExplainer built and cached.")
+    return _explainer_cache[key]
+
+
+# Count-like features that are only meaningful when non-zero. A positive SHAP
+# attribution on one of these with value 0 is an artefact of the tree structure,
+# not evidence, and must never be shown to an officer.
+_REQUIRES_NONZERO = {
+    "historical_fraud_count",
+    "mule_atm_affinity",
+    "mule_network_affinity",
+    "h3_fraud_density",
+    "is_weekend",
+    "is_night",
 }
 
-# Fraud count thresholds for natural language
-def _fraud_label(count: int) -> str:
-    if count == 0:
-        return "no prior fraud history"
-    elif count <= 2:
-        return f"{count} prior fraud incident(s)"
-    elif count <= 5:
-        return f"{count} confirmed fraud incidents (high-risk)"
-    else:
-        return f"{count} confirmed fraud incidents (VERY HIGH risk)"
+
+def _fraud_label(count: float) -> str:
+    c = int(count)
+    if c == 0:
+        return "no recorded fraud history"
+    if c <= 2:
+        return f"{c} prior fraud incident(s) recorded here"
+    if c <= 5:
+        return f"{c} confirmed fraud incidents (high-risk cash point)"
+    return f"{c} confirmed fraud incidents (VERY HIGH risk cash point)"
 
 
 def _travel_label(mins: float) -> str:
     if mins <= 5:
-        return f"extremely close (~{mins:.0f} min travel)"
-    elif mins <= 15:
-        return f"close proximity (~{mins:.0f} min travel)"
-    elif mins <= 30:
-        return f"moderate distance (~{mins:.0f} min travel)"
-    else:
-        return f"distant location (~{mins:.0f} min travel)"
+        return f"immediately reachable (~{mins:.0f} min drive)"
+    if mins <= 15:
+        return f"close proximity (~{mins:.0f} min drive)"
+    if mins <= 30:
+        return f"moderate distance (~{mins:.0f} min drive)"
+    return f"distant (~{mins:.0f} min drive)"
 
 
-# ─── Template-based explanation (Phase 1 — immediate) ─────────────────────────
+def _positive_phrase(fname: str, val: float) -> Optional[str]:
+    """Officer-facing phrasing for a feature that PUSHED the ranking UP."""
+    if fname == "travel_time_mins":
+        return _travel_label(val)
+    if fname == "distance_km":
+        return f"{val:.1f} km by road"
+    if fname == "historical_fraud_count":
+        return _fraud_label(val)
+    if fname == "mule_atm_affinity":
+        return f"THIS mule has cashed out here before ({int(val)}x)"
+    if fname == "mule_network_affinity":
+        return f"{int(val)} prior cash-outs by linked mules operating in this syndicate zone"
+    if fname == "h3_fraud_density":
+        return f"dense fraud cluster in the surrounding ~5 km ({int(val)} incidents)"
+    if fname == "is_night":
+        return "night-time window (elevated mule activity)"
+    if fname == "is_weekend":
+        return "weekend timing pattern"
+    if fname == "atm_type_encoded":
+        return "cash-point type favoured by runners (Banking Correspondent)"
+    if fname == "hour_of_day":
+        return f"time-of-day pattern ({int(val):02d}:00 IST)"
+    return None
+
+
+def _negative_phrase(fname: str, val: float) -> Optional[str]:
+    """Phrasing for a feature that PUSHED the ranking DOWN — shown as a caveat."""
+    if fname == "travel_time_mins":
+        return f"but {val:.0f} min away, so a runner may reach a closer point first"
+    if fname == "distance_km":
+        return f"but {val:.1f} km out"
+    if fname == "historical_fraud_count":
+        return "but no significant fraud history here"
+    if fname == "mule_atm_affinity":
+        return "but this mule has no prior use of this point"
+    if fname == "mule_network_affinity":
+        return "but no known syndicate activity here"
+    if fname == "h3_fraud_density":
+        return "but a low-crime neighbourhood"
+    return None
+
+
 def generate_template_explanation(candidate: Dict[str, Any], rank: int) -> str:
     """
-    Generates a readable explanation string from candidate feature values.
-    Works without any ML model or SHAP — pure template logic.
-
-    Args:
-        candidate: ATM candidate dict with travel_time_mins, historical_fraud_count, etc.
-        rank:      The ATM's rank in the Top-5 list (1 = most likely).
-
-    Returns:
-        Human-readable explanation string for police dispatch display.
+    Model-free explanation from the candidate's own fields. Used whenever the
+    heuristic fallback is serving, so the UI never shows a blank reason.
     """
-    travel_mins = candidate.get("travel_time_mins", 0)
-    fraud_count = candidate.get("historical_fraud_count", 0)
-    mule_affinity = candidate.get("mule_atm_affinity", 0)
-    network_affinity = candidate.get("mule_network_affinity", 0)
-    score = candidate.get("confidence_score", 0)
-
-    # ── Build explanation components ─────────────────────────────────────
-    reasons = []
-
-    # Primary: Travel distance (always the clearest factor)
-    reasons.append(_travel_label(travel_mins))
-
-    # Secondary: Fraud history
-    reasons.append(_fraud_label(fraud_count))
-
-    # Tertiary: Mule-specific affinity (if available)
-    if mule_affinity and mule_affinity > 0:
-        reasons.append(f"this mule has used this ATM before ({int(mule_affinity)} time(s))")
-    elif network_affinity and network_affinity > 0:
-        reasons.append(f"linked mule accounts have used this ATM ({int(network_affinity)} time(s))")
-
-    # ── Compose final string ──────────────────────────────────────────────
-    if len(reasons) == 1:
-        explanation = f"Rank #{rank}: {reasons[0]}."
-    elif len(reasons) == 2:
-        explanation = f"Rank #{rank}: {reasons[0]} + {reasons[1]}."
-    else:
-        explanation = f"Rank #{rank}: {reasons[0]} + {reasons[1]} + {reasons[2]}."
-
-    # Confidence suffix
-    if score >= 0.8:
-        explanation += " [HIGH CONFIDENCE]"
-    elif score >= 0.5:
-        explanation += " [MODERATE CONFIDENCE]"
-
-    return explanation
+    travel = float(candidate.get("travel_time_mins", 0) or 0)
+    fraud = float(candidate.get("historical_fraud_count", 0) or 0)
+    reasons = [_travel_label(travel), _fraud_label(fraud)]
+    return f"Rank #{rank}: {' + '.join(reasons)}."
 
 
-# ─── SHAP-based explanation (Phase 2 — after LightGBM is trained) ─────────────
 def generate_shap_explanations(
     model,
     feature_matrix,
@@ -107,90 +136,81 @@ def generate_shap_explanations(
     feature_names: List[str],
 ) -> List[str]:
     """
-    Uses SHAP TreeExplainer to compute feature contributions for each
-    ranked ATM, then translates the top 2 contributing features into
-    natural language explanations.
+    SHAP TreeExplainer attributions translated into dispatch language.
 
-    Args:
-        model:          Trained LightGBM model object.
-        feature_matrix: numpy array of shape (n_candidates, n_features).
-        candidate_atms: List of candidate dicts (same order as feature_matrix rows).
-        feature_names:  List of feature column names matching feature_matrix columns.
-
-    Returns:
-        List of explanation strings, one per candidate.
+    Feature values are read from `feature_matrix` (the exact rows the model
+    scored), never from the candidate dict — so the explanation is guaranteed to
+    describe what the model actually saw.
     """
     try:
-        import shap
         import numpy as np
+        import shap
     except ImportError:
-        print("[Explainability] SHAP not installed. Falling back to template explanations.")
-        return [
-            generate_template_explanation(c, i + 1)
-            for i, c in enumerate(candidate_atms)
-        ]
+        print("[Explainability] SHAP unavailable - using template explanations.")
+        return [generate_template_explanation(c, i + 1) for i, c in enumerate(candidate_atms)]
 
-    explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(feature_matrix)
+    try:
+        explainer = _get_explainer(model)
+        shap_values = np.asarray(explainer.shap_values(feature_matrix))
+    except Exception as e:
+        print(f"[Explainability] SHAP failed ({e}) - using template explanations.")
+        return [generate_template_explanation(c, i + 1) for i, c in enumerate(candidate_atms)]
 
-    # ── Negative SHAP phrases: features that REDUCE selection probability ─
-    # We need different language for suppressors vs drivers.
-    NEGATIVE_FEATURE_PHRASES = {
-        "travel_time_mins":        "long road travel time (~{val:.0f} min) reduces likelihood",
-        "distance_km":             "large road distance ({val:.1f} km) reduces likelihood",
-        "historical_fraud_count":  "low fraud history at this ATM",
-        "mule_atm_affinity":       "mule has not used this ATM before",
-        "mule_network_affinity":   "no linked mule usage at this ATM",
-        "h3_fraud_density":        "low crime density in surrounding area",
-        "is_weekend":              "weekday timing (lower mule activity)",
-    }
+    idx = {n: i for i, n in enumerate(feature_names)}
+    explanations: List[str] = []
 
-    explanations = []
     for i, (atm, shap_row) in enumerate(zip(candidate_atms, shap_values)):
-        # Separate positive (drivers) and negative (suppressors) SHAP values
-        positive_shap = [
-            (sv, fname) for sv, fname in zip(shap_row, feature_names) if sv > 0
-        ]
-        negative_shap = [
-            (sv, fname) for sv, fname in zip(shap_row, feature_names) if sv < 0
-        ]
+        row_vals = feature_matrix[i]
 
-        # Sort by magnitude: most impactful first
-        positive_shap.sort(key=lambda x: x[0], reverse=True)
-        negative_shap.sort(key=lambda x: x[0])  # most negative first
+        def value_of(fname: str) -> float:
+            j = idx.get(fname)
+            return float(row_vals[j]) if j is not None and j < len(row_vals) else 0.0
 
-        parts = []
-        # Add top 1-2 positive drivers
-        for sv, fname in positive_shap[:2]:
-            phrase_template = FEATURE_PHRASES.get(fname)
-            if phrase_template:
-                val = atm.get(fname, 0)
-                phrase = phrase_template.replace("{val:.0f}", f"{val:.0f}").\
-                    replace("{val:.1f}", f"{val:.1f}")
+        scored = []
+        for sv, fname in zip(shap_row, feature_names):
+            val = value_of(fname)
+            # Drop attributions that cite non-evidence (a zero count).
+            if fname in _REQUIRES_NONZERO and val == 0:
+                continue
+            scored.append((float(sv), fname, val))
+
+        drivers = sorted([s for s in scored if s[0] > 0], key=lambda t: -t[0])
+        suppressors = sorted([s for s in scored if s[0] < 0], key=lambda t: t[0])
+
+        parts: List[str] = []
+        seen = set()
+        for sv, fname, val in drivers:
+            phrase = _positive_phrase(fname, val)
+            # distance_km and travel_time_mins say the same thing to a human —
+            # citing both wastes the officer's attention.
+            key = "proximity" if fname in ("travel_time_mins", "distance_km") else fname
+            if phrase and key not in seen:
                 parts.append(phrase)
+                seen.add(key)
+            if len(parts) == 2:
+                break
 
-        # Add top 1 negative suppressor (if strong enough)
-        for sv, fname in negative_shap[:1]:
-            if abs(sv) > 0.1:  # Only mention if it has meaningful negative impact
-                phrase_template = NEGATIVE_FEATURE_PHRASES.get(fname)
-                if phrase_template:
-                    val = atm.get(fname, 0)
-                    phrase = phrase_template.replace("{val:.0f}", f"{val:.0f}").\
-                        replace("{val:.1f}", f"{val:.1f}")
-                    parts.append(f"[Note: {phrase}]")
+        # Fall back to the plain facts rather than emitting a bare score.
+        if not parts:
+            parts.append(_travel_label(value_of("travel_time_mins")))
+            fc = value_of("historical_fraud_count")
+            if fc > 0:
+                parts.append(_fraud_label(fc))
 
-        base = f"Rank #{i + 1}: "
-        if parts:
-            explanation = base + " + ".join(parts) + "."
-        else:
-            explanation = base + f"ML score = {atm.get('score', 0):.3f}."
+        caveat = ""
+        for sv, fname, val in suppressors[:1]:
+            # Only surface a caveat with real weight relative to this row.
+            if abs(sv) > 0.05 * (abs(shap_row).max() or 1.0):
+                phrase = _negative_phrase(fname, val)
+                key = "proximity" if fname in ("travel_time_mins", "distance_km") else fname
+                if phrase and key not in seen:
+                    caveat = f" — {phrase}"
 
-        explanations.append(explanation)
+        explanations.append(f"Rank #{i + 1}: {' + '.join(parts)}{caveat}.")
 
     return explanations
 
 
-# ─── Master dispatch function ─────────────────────────────────────────────────
 def generate_explanations(
     top_candidates: List[Dict[str, Any]],
     model=None,
@@ -198,44 +218,23 @@ def generate_explanations(
     feature_names: Optional[List[str]] = None,
     model_used: str = "FallbackHeuristic",
 ) -> List[str]:
-    """
-    Routes to the correct explanation method based on which model was used.
-
-    Called by inference_pipeline.py after ranking is complete.
-
-    Args:
-        top_candidates: The final Top-5 ATM candidates (sorted by rank).
-        model:          LightGBM model (or None if heuristic was used).
-        feature_matrix: numpy feature array (or None).
-        feature_names:  Feature column names (or None).
-        model_used:     "LambdaMART" or "FallbackHeuristic".
-
-    Returns:
-        List of explanation strings, one per candidate.
-    """
+    """Routes to SHAP when a real model is serving, templates otherwise."""
     if model_used == "LambdaMART" and model is not None and feature_matrix is not None:
-        print("[Explainability] Using SHAP explanations (LambdaMART model).")
-        return generate_shap_explanations(model, feature_matrix, top_candidates, feature_names or [])
-    else:
-        print("[Explainability] Using template explanations (Fallback/Heuristic mode).")
-        return [
-            generate_template_explanation(c, i + 1)
-            for i, c in enumerate(top_candidates)
-        ]
+        print("[Explainability] Using SHAP attributions (LambdaMART).")
+        return generate_shap_explanations(model, feature_matrix, top_candidates,
+                                          feature_names or [])
+    print("[Explainability] Using template explanations (heuristic mode).")
+    return [generate_template_explanation(c, i + 1) for i, c in enumerate(top_candidates)]
 
 
 # ─── Self-test ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    test_candidates = [
-        {"bank_name": "HDFC", "address": "Rajiv Chowk",      "travel_time_mins": 7,  "historical_fraud_count": 8, "mule_atm_affinity": 2, "confidence_score": 0.91},
-        {"bank_name": "SBI",  "address": "Connaught Place",   "travel_time_mins": 0,  "historical_fraud_count": 6, "mule_atm_affinity": 0, "confidence_score": 0.84},
-        {"bank_name": "UBI",  "address": "Nangloi",           "travel_time_mins": 40, "historical_fraud_count": 7, "mule_atm_affinity": 1, "confidence_score": 0.72},
-        {"bank_name": "BOB",  "address": "Mayur Vihar",       "travel_time_mins": 38, "historical_fraud_count": 5, "mule_atm_affinity": 0, "confidence_score": 0.60},
-        {"bank_name": "PNB",  "address": "Lajpat Nagar",      "travel_time_mins": 21, "historical_fraud_count": 4, "mule_atm_affinity": 0, "confidence_score": 0.45},
+    cands = [
+        {"bank_name": "HDFC", "travel_time_mins": 7,  "historical_fraud_count": 8},
+        {"bank_name": "SBI",  "travel_time_mins": 2,  "historical_fraud_count": 6},
+        {"bank_name": "UBI",  "travel_time_mins": 40, "historical_fraud_count": 7},
+        {"bank_name": "PNB",  "travel_time_mins": 21, "historical_fraud_count": 0},
     ]
-
-    explanations = generate_explanations(test_candidates, model_used="FallbackHeuristic")
-
-    print("\n[TEST] Generated Explanations for Police Dispatch:\n")
-    for i, (atm, expl) in enumerate(zip(test_candidates, explanations), 1):
-        print(f"  {expl}")
+    print("\n[TEST] Template mode (no model):\n")
+    for e in generate_explanations(cands, model_used="FallbackHeuristic"):
+        print(f"  {e}")

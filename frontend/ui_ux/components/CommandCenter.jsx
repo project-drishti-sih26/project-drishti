@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import NavSidebar from './NavSidebar';
 import Header from './Header';
-import OverviewView from './OverviewView';
-import AllCasesView from './AllCasesView';
+import Alerts from './Alerts';
 import SidebarLeft from './SidebarLeft';
 import CenterRadar from './CenterRadar';
 import SidebarRight from './SidebarRight';
@@ -10,10 +8,46 @@ import PoliceDispatchModal from './PoliceDispatchModal';
 import GisDashboard from '../../gis/components/GisDashboard.jsx';
 
 /**
- * Initial Master Cases Registry
+ * CommandCenter Component (Role 4 - UI/UX)
+ * Cybercrime Incident Monitoring & Response Cell
  */
-const initialCases = [
-  {
+const CommandCenter = () => {
+  const [currentView, setCurrentView] = useState('overview');
+  const [isDispatchModalOpen, setIsDispatchModalOpen] = useState(false);
+  const [selectedAtmId, setSelectedAtmId] = useState('ATM-091');
+  const [secondsRemaining, setSecondsRemaining] = useState(656); // 10m 56s
+
+  /**
+   * Provenance of what is currently on screen.
+   *
+   * The dashboard boots with a scripted sample case so the layout is never
+   * empty, and swaps to real model output the moment an alert arrives. Those
+   * two states MUST be visually distinguishable: a demo figure mistaken for a
+   * prediction is the single most damaging thing this UI could do, both to a
+   * judge's trust and to an officer's decision.
+   *
+   * `degraded` mirrors the backend flag raised when the ML engine failed and a
+   * database heuristic answered instead. The backend was already stamping it;
+   * until now nothing rendered it, which made the flag worthless.
+   */
+  const [liveMeta, setLiveMeta] = useState({
+    isLive: false,          // false => scripted sample data on screen
+    connected: false,
+    degraded: false,
+    degradedReason: null,
+    modelUsed: null,
+    windowSource: null,
+    startIst: null,
+    endIst: null,
+    candidatesEvaluated: null,
+    top5Mass: null,
+    scorecard: null,
+    originLat: null,
+    originLon: null,
+  });
+
+  // Dynamic Active Case State
+  const [activeCase, setActiveCase] = useState({
     case_id: 'NCR-2026-00491',
     victim_name: 'R. K. Sharma',
     victim_account: 'SBIN •••• 9284',
@@ -25,185 +59,80 @@ const initialCases = [
     debit_time: '22:41 IST',
     crime_vector: 'Unauthorized APK Screen Share',
     predicted_atm: 'SBI Kiosk #091, Inner Circle Block-B, CP',
-    assigned_patrol: 'PCR Unit 12 (Central Division)',
-    status: 'Active'
-  },
-  {
-    case_id: 'NCR-2026-00492',
-    victim_name: 'Sunita Mehra',
-    victim_account: 'ICIC •••• 4120',
-    victim_bank: 'ICICI Bank (Defence Colony Branch)',
-    mule_account: 'PUNB •••• 7731',
-    mule_name: 'Rahul Verma',
-    mule_bank: 'Punjab National Bank (Lajpat Nagar Branch)',
-    compromised_amount: 140000,
-    debit_time: '22:52 IST',
-    crime_vector: 'Impersonation Vishing Call',
-    predicted_atm: 'HDFC ATM, Statesman House, Barakhamba Road',
-    assigned_patrol: 'PCR Unit 08 (New Delhi)',
-    status: 'In Progress'
-  },
-  {
-    case_id: 'NCR-2026-00488',
-    victim_name: 'Vikram Malhotra',
-    victim_account: 'HDFC •••• 6055',
-    victim_bank: 'HDFC Bank (Saket Branch)',
-    mule_account: 'UTIB •••• 3419',
-    mule_name: 'Sunil Kumar',
-    mule_bank: 'Axis Bank (Janpath Branch)',
-    compromised_amount: 55000,
-    debit_time: '21:30 IST',
-    crime_vector: 'KYC Phishing SMS / Link',
-    predicted_atm: 'ICICI Bank ATM, Janpath Market Lane',
-    assigned_patrol: 'PCR Unit 04 (South Division)',
-    status: 'Under Monitoring'
-  },
-  {
-    case_id: 'NCR-2026-00482',
-    victim_name: 'Anjali Sharma',
-    victim_account: 'BARB •••• 8192',
-    victim_bank: 'Bank of Baroda (Karol Bagh Branch)',
-    mule_account: 'SBIN •••• 1044',
-    mule_name: 'Deepak Yadav',
-    mule_bank: 'State Bank of India (Patel Nagar Branch)',
-    compromised_amount: 92000,
-    debit_time: '20:15 IST',
-    crime_vector: 'Unauthorized APK Screen Share',
-    predicted_atm: 'PNB ATM, Antriksh Bhawan, KG Marg',
-    assigned_patrol: 'PCR Unit 15 (Central)',
-    status: 'Under Monitoring'
-  },
-  {
-    case_id: 'NCR-2026-00475',
-    victim_name: 'Priya Deshmukh',
-    victim_account: 'SBIN •••• 3341',
-    victim_bank: 'State Bank of India (Vasant Kunj Branch)',
-    mule_account: 'CNRB •••• 5590',
-    mule_name: 'Mohit Rawat',
-    mule_bank: 'Canara Bank (Munirka Branch)',
-    compromised_amount: 210000,
-    debit_time: '18:20 IST',
-    crime_vector: 'Impersonation Vishing Call',
-    predicted_atm: 'Axis Bank ATM, Outer Circle, CP',
-    assigned_patrol: 'PCR Unit 02 (South West)',
-    status: 'Resolved'
-  },
-  {
-    case_id: 'NCR-2026-00462',
-    victim_name: 'Amit Verma',
-    victim_account: 'KKBK •••• 9920',
-    victim_bank: 'Kotak Mahindra Bank (Nehru Place Branch)',
-    mule_account: 'HDFC •••• 4410',
-    mule_name: 'Rajesh Gupta',
-    mule_bank: 'HDFC Bank (Okhla Phase 2 Branch)',
-    compromised_amount: 38000,
-    debit_time: '16:45 IST',
-    crime_vector: 'Card Cloning / Skimming',
-    predicted_atm: 'SBI Kiosk #091, Inner Circle Block-B, CP',
-    assigned_patrol: 'PCR Unit 09 (South East)',
-    status: 'Resolved'
-  }
-];
+    predicted_eta: '11 min',
+    predicted_distance: '1.8 km',
+    assigned_patrol: 'PCR Unit 12 (Central Division)'
+  });
 
-const initialAtms = [
-  {
-    id: 'ATM-091',
-    rank: 1,
-    name: 'SBI Kiosk #091',
-    location: 'Block B, Inner Circle, Connaught Place',
-    distance: '1.8 km',
-    eta: '11 min',
-    probability: '89%',
-    cctv_status: 'Active (3 Cameras)',
-    notes: 'Identified recurring withdrawal node for reported beneficiary syndicate.',
-    latitude: 28.6328,
-    longitude: 77.2197,
-    xPercent: 50,
-    yPercent: 46
-  },
-  {
-    id: 'ATM-142',
-    rank: 2,
-    name: 'HDFC ATM',
-    location: 'Statesman House, Barakhamba Road',
-    distance: '2.4 km',
-    eta: '17 min',
-    probability: '82%',
-    cctv_status: 'Active (Bank Guard)',
-    notes: 'Located on transit corridor towards New Delhi Railway Station.',
-    latitude: 28.6295,
-    longitude: 77.2274,
-    xPercent: 70,
-    yPercent: 58
-  },
-  {
-    id: 'ATM-033',
-    rank: 3,
-    name: 'ICICI Bank ATM',
-    location: 'Janpath Market Lane',
-    distance: '3.1 km',
-    eta: '22 min',
-    probability: '76%',
-    cctv_status: 'Active (Market Feed)',
-    notes: 'Pedestrian market access point.',
-    latitude: 28.6231,
-    longitude: 77.2185,
-    xPercent: 44,
-    yPercent: 74
-  },
-  {
-    id: 'ATM-089',
-    rank: 4,
-    name: 'PNB ATM',
-    location: 'Antriksh Bhawan, Kasturba Gandhi Marg',
-    distance: '3.8 km',
-    eta: '29 min',
-    probability: '68%',
-    cctv_status: 'Active (Building Security)',
-    notes: 'Verified unoccupied during last patrol check at 22:30 IST.',
-    latitude: 28.6255,
-    longitude: 77.2241,
-    xPercent: 76,
-    yPercent: 36
-  },
-  {
-    id: 'ATM-052',
-    rank: 5,
-    name: 'Axis Bank ATM',
-    location: 'Outer Circle, Near Shankar Market',
-    distance: '4.2 km',
-    eta: '34 min',
-    probability: '59%',
-    cctv_status: 'Maintenance Offline',
-    notes: 'Secondary node based on cell tower perimeter coverage.',
-    latitude: 28.6341,
-    longitude: 77.2215,
-    xPercent: 58,
-    yPercent: 24
-  }
-];
+  const [atms, setAtms] = useState([
+    {
+      id: 'ATM-091',
+      rank: 1,
+      name: 'SBI Kiosk #091',
+      location: 'Block B, Inner Circle, Connaught Place',
+      distance: '1.8 km',
+      eta: '11 min',
+      probability: '89%',
+      cctv_status: 'Active (3 Cameras)',
+      notes: 'Identified recurring withdrawal node for reported beneficiary syndicate.',
+      xPercent: 50,
+      yPercent: 46
+    },
+    {
+      id: 'ATM-142',
+      rank: 2,
+      name: 'HDFC ATM',
+      location: 'Statesman House, Barakhamba Road',
+      distance: '2.4 km',
+      eta: '17 min',
+      probability: '82%',
+      cctv_status: 'Active (Bank Guard)',
+      notes: 'Located on transit corridor towards New Delhi Railway Station.',
+      xPercent: 70,
+      yPercent: 58
+    },
+    {
+      id: 'ATM-033',
+      rank: 3,
+      name: 'ICICI Bank ATM',
+      location: 'Janpath Market Lane',
+      distance: '3.1 km',
+      eta: '22 min',
+      probability: '76%',
+      cctv_status: 'Active (Market Feed)',
+      notes: 'Pedestrian market access point.',
+      xPercent: 44,
+      yPercent: 74
+    },
+    {
+      id: 'ATM-089',
+      rank: 4,
+      name: 'PNB ATM',
+      location: 'Antriksh Bhawan, Kasturba Gandhi Marg',
+      distance: '3.8 km',
+      eta: '29 min',
+      probability: '68%',
+      cctv_status: 'Active (Building Security)',
+      notes: 'Verified unoccupied during last patrol check at 22:30 IST.',
+      xPercent: 76,
+      yPercent: 36
+    },
+    {
+      id: 'ATM-052',
+      rank: 5,
+      name: 'Axis Bank ATM',
+      location: 'Outer Circle, Near Shankar Market',
+      distance: '4.2 km',
+      eta: '34 min',
+      probability: '59%',
+      cctv_status: 'Maintenance Offline',
+      notes: 'Secondary node based on cell tower perimeter coverage.',
+      xPercent: 58,
+      yPercent: 24
+    }
+  ]);
 
-/**
- * CommandCenter Component
- * Enterprise Law Enforcement Dashboard with Left Sidebar Navigation:
- * 1) All Cases
- * 2) Overview
- * 3) Live Incidents
- * 4) Map
- */
-const CommandCenter = () => {
-  const [currentView, setCurrentView] = useState('overview');
-  const [casesList, setCasesList] = useState(initialCases);
-  const [activeCaseId, setActiveCaseId] = useState('NCR-2026-00491');
-  const [selectedAtmId, setSelectedAtmId] = useState('ATM-091');
-  const [atms, setAtms] = useState(initialAtms);
-  const [secondsRemaining, setSecondsRemaining] = useState(656); // 10m 56s
-  const [isDispatchModalOpen, setIsDispatchModalOpen] = useState(false);
-  const [hasUnreadNotification, setHasUnreadNotification] = useState(true);
-
-  const activeCase = casesList.find((c) => c.case_id === activeCaseId) || casesList[0];
-
-  // WebSocket Integration for Live Machine Learning Feed
+  // Live WebSocket Connection to Project Drishti Alert Stream
   useEffect(() => {
     let ws = null;
     let reconnectTimer = null;
@@ -215,14 +144,19 @@ const CommandCenter = () => {
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-          if (isMounted) console.log(`[Drishti] Connected to WebSocket: ${wsUrl}`);
+          if (!isMounted) return;
+          console.log(`[Drishti CommandCenter] Connected to live WebSocket: ${wsUrl}`);
+          setLiveMeta((m) => ({ ...m, connected: true }));
         };
 
         ws.onmessage = (event) => {
           if (!isMounted) return;
           try {
             const liveData = JSON.parse(event.data);
+            console.log('[Drishti CommandCenter] Received live alert from ML Engine:', liveData);
+
             if (liveData.top_5_atms && liveData.top_5_atms.length > 0) {
+              // 1. Update Top-5 ATMs in the Sidebar and Map
               const mappedAtms = liveData.top_5_atms.map((a, idx) => ({
                 id: a.location_id || `ATM-${idx + 1}`,
                 rank: a.rank || idx + 1,
@@ -230,8 +164,22 @@ const CommandCenter = () => {
                 location: a.address || 'Address unavailable',
                 distance: `${a.distance_km} km`,
                 eta: `${Math.round(a.travel_time_mins)} min`,
-                probability: `${Math.round((a.confidence_score || 0.85) * 100)}%`,
-                cctv_status: 'Active (3 Cameras)',
+                // probability_pct comes straight from the calibrated softmax.
+                // The previous `(a.confidence_score || 0.85)` invented an 85%
+                // whenever the field was absent OR genuinely zero — printing a
+                // confident number the model never produced. If it is missing
+                // now, we say so.
+                probability:
+                  typeof a.probability_pct === 'number'
+                    ? `${a.probability_pct.toFixed(1)}%`
+                    : typeof a.confidence_score === 'number'
+                      ? `${(a.confidence_score * 100).toFixed(1)}%`
+                      : 'n/a',
+                risk_tier: a.risk_tier || null,
+                // CCTV coverage is not in any dataset we hold. It used to be
+                // hardcoded to "Active (3 Cameras)" for every live ATM, which
+                // is fabricated evidence on a dispatch screen.
+                cctv_status: 'Not integrated (no CCTV feed)',
                 notes: a.explanation || 'Predicted high-probability withdrawal target',
                 latitude: a.latitude,
                 longitude: a.longitude,
@@ -241,11 +189,35 @@ const CommandCenter = () => {
               setAtms(mappedAtms);
               setSelectedAtmId(mappedAtms[0].id);
 
-              if (liveData.time_window && liveData.time_window.minutes_from_now) {
-                setSecondsRemaining(liveData.time_window.minutes_from_now * 60);
+              // 2. Update Countdown Timer from Survival Analysis prediction.
+              //    `&& liveData.time_window.minutes_from_now` was falsy at 0 —
+              //    exactly the case where the interception window is ALREADY
+              //    OPEN, i.e. the most urgent alert the system can raise. It
+              //    kept the stale 10:56 demo countdown on screen instead.
+              const tw = liveData.time_window;
+              const lead = tw && typeof tw === 'object' ? tw.minutes_from_now : null;
+              if (typeof lead === 'number' && Number.isFinite(lead)) {
+                setSecondsRemaining(Math.max(0, Math.round(lead * 60)));
               }
 
-              const newLiveCase = {
+              setLiveMeta({
+                isLive: true,
+                connected: true,
+                degraded: liveData.degraded === true,
+                degradedReason: liveData.degraded_reason || null,
+                modelUsed: liveData.model_used || null,
+                windowSource: tw && typeof tw === 'object' ? tw.model_source : null,
+                startIst: tw && typeof tw === 'object' ? tw.start_ist : null,
+                endIst: tw && typeof tw === 'object' ? tw.end_ist : null,
+                candidatesEvaluated: liveData.total_candidates_evaluated ?? null,
+                top5Mass: liveData.top5_probability_mass ?? null,
+                scorecard: liveData.model_scorecard || null,
+                originLat: liveData.mule_location_known ? liveData.mule_last_latitude : null,
+                originLon: liveData.mule_location_known ? liveData.mule_last_longitude : null,
+              });
+
+              // 3. Update the Active Incident Case Details
+              setActiveCase({
                 case_id: liveData.case_id || 'NCR-2026-LIVE',
                 victim_name: 'Reported Victim',
                 victim_account: liveData.victim_account_id || 'ACC •••• 9284',
@@ -254,28 +226,27 @@ const CommandCenter = () => {
                 mule_name: 'Suspect Mule Runner',
                 mule_bank: 'Target Beneficiary Account',
                 compromised_amount: liveData.compromised_amount || 150000,
-                debit_time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST',
+                debit_time: liveData.detected_at_ist
+                  || new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST',
                 crime_vector: 'High-Velocity Multi-Hop Cyber Fraud',
                 predicted_atm: `${mappedAtms[0].name}, ${mappedAtms[0].location}`,
-                assigned_patrol: 'PCR Unit 12 (Central Division)',
-                status: 'Active'
-              };
-
-              setCasesList((prev) => [newLiveCase, ...prev.filter(c => c.case_id !== newLiveCase.case_id)]);
-              setActiveCaseId(newLiveCase.case_id);
-              setHasUnreadNotification(true);
+                predicted_eta: mappedAtms[0].eta,
+                predicted_distance: mappedAtms[0].distance,
+                assigned_patrol: 'PCR Unit 12 (Central Division)'
+              });
             }
           } catch (e) {
-            console.error('[Drishti] Error parsing alert message:', e);
+            console.error('[Drishti CommandCenter] Failed to parse alert message:', e);
           }
         };
 
         ws.onclose = () => {
           if (!isMounted) return;
+          setLiveMeta((m) => ({ ...m, connected: false }));
           reconnectTimer = setTimeout(connectWebSocket, 4000);
         };
       } catch (err) {
-        console.warn('[Drishti] WebSocket initialization warning:', err);
+        console.warn('[Drishti CommandCenter] WebSocket connection error:', err);
       }
     };
 
@@ -288,7 +259,6 @@ const CommandCenter = () => {
     };
   }, []);
 
-  // Countdown timer
   useEffect(() => {
     const timer = setInterval(() => {
       setSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));
@@ -302,323 +272,383 @@ const CommandCenter = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleSelectView = (viewId) => {
-    setCurrentView(viewId);
-    if (viewId === 'live_operations') {
-      setHasUnreadNotification(false);
-    }
-  };
-
-  const handleSelectCase = (c) => {
-    setActiveCaseId(c.case_id);
-  };
-
-  const handleOpenLiveIncident = (c) => {
-    if (c) setActiveCaseId(c.case_id);
-    setCurrentView('live_operations');
-    setHasUnreadNotification(false);
-  };
-
-  const handleOpenMap = (c) => {
-    if (c) setActiveCaseId(c.case_id);
-    setCurrentView('spatial_radar');
+  const handleSelectAtm = (atm) => {
+    setSelectedAtmId(atm.id);
   };
 
   const handleFeedback = (actionType) => {
     if (actionType === 'intercepted') {
-      setCasesList(prev => prev.map(c => c.case_id === activeCaseId ? { ...c, status: 'Resolved' } : c));
+      setAtms(prev => prev.map(a => a.id === selectedAtmId ? { ...a, statusTag: 'Resolved' } : a));
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex antialiased">
-      {/* 1. MINIMAL LEFT SIDEBAR NAVIGATION */}
-      <NavSidebar
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col antialiased">
+      <Header
         currentView={currentView}
-        onSelectView={handleSelectView}
-        hasUnreadNotification={hasUnreadNotification}
+        onSelectView={setCurrentView}
       />
 
-      {/* 2. MAIN APPLICATION WORKSPACE */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        {/* Top Header */}
-        <Header
-          currentView={currentView}
-          activeCaseId={activeCaseId}
-          hasUnreadNotification={hasUnreadNotification}
-          onSelectLiveIncident={() => handleSelectView('live_operations')}
-          onClearNotifications={() => setHasUnreadNotification(false)}
-          onOpenDispatchModal={() => setIsDispatchModalOpen(true)}
-        />
+      {/*
+        PROVENANCE STRIP — always on screen, in every view.
 
-        {/* Main View Area */}
-        <main className="flex-1 p-5 space-y-5 max-w-7xl w-full mx-auto">
-          {/* VIEW 1: ALL CASES */}
-          {currentView === 'cases' && (
-            <AllCasesView
-              cases={casesList}
-              selectedCaseId={activeCaseId}
-              onSelectCase={handleSelectCase}
-              onOpenLiveIncident={handleOpenLiveIncident}
-              onOpenDispatchModal={() => setIsDispatchModalOpen(true)}
-              onOpenMap={handleOpenMap}
-            />
-          )}
+        Answers three questions a judge or a duty officer will ask, without
+        anyone having to open a console:
+          1. Is this a real model prediction, or the scripted sample?
+          2. Which model produced it, and how accurate is that model?
+          3. Did the ML engine fail and quietly hand over to a heuristic?
+        (3) is the important one. The backend stamps `degraded` when inference
+        raised and a database heuristic answered instead. An unrendered flag
+        protects nobody, so a failure now takes over the top of the screen.
+      */}
+      {liveMeta.degraded ? (
+        <div className="bg-rose-700 text-white px-5 py-2.5 border-b-2 border-rose-900">
+          <div className="max-w-7xl mx-auto flex items-start gap-3">
+            <span className="font-bold text-xs uppercase tracking-widest shrink-0 pt-px">
+              ⚠ Degraded
+            </span>
+            <span className="text-xs leading-relaxed">
+              {liveMeta.degradedReason
+                || 'ML engine unavailable — this is a database heuristic, NOT a model prediction.'}
+              {' '}Do not dispatch on these rankings.
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className={`px-5 py-2 border-b text-[11px] ${liveMeta.isLive
+          ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+          : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-x-5 gap-y-1">
+            <span className="font-bold uppercase tracking-widest">
+              {liveMeta.isLive ? '● Live prediction' : '○ Sample case (awaiting live alert)'}
+            </span>
 
-          {/* VIEW 2: OVERVIEW */}
-          {currentView === 'overview' && (
-            <OverviewView
-              cases={casesList}
-              onViewCase={(caseId) => {
-                setActiveCaseId(caseId);
-                handleSelectView('live_operations');
+            {liveMeta.isLive && (
+              <>
+                <span className="font-mono">
+                  Ranker: <strong>{liveMeta.modelUsed || 'unknown'}</strong>
+                </span>
+                <span className="font-mono">
+                  Window: <strong>{liveMeta.windowSource || 'unknown'}</strong>
+                </span>
+                {liveMeta.startIst && liveMeta.endIst && (
+                  <span className="font-mono">
+                    Intercept <strong>{liveMeta.startIst}–{liveMeta.endIst} IST</strong>
+                  </span>
+                )}
+                {liveMeta.candidatesEvaluated != null && (
+                  <span className="font-mono">
+                    {liveMeta.candidatesEvaluated} cash points searched
+                  </span>
+                )}
+                {typeof liveMeta.top5Mass === 'number' && (
+                  <span className="font-mono">
+                    Top-5 holds {(liveMeta.top5Mass * 100).toFixed(0)}% of probability
+                  </span>
+                )}
+                {liveMeta.scorecard?.top5_hit_rate && (
+                  <span className="font-mono">
+                    Held-out accuracy: Top-1 <strong>{(liveMeta.scorecard.top1_hit_rate * 100).toFixed(1)}%</strong>,
+                    Top-5 <strong>{(liveMeta.scorecard.top5_hit_rate * 100).toFixed(1)}%</strong>
+                    {liveMeta.scorecard.evaluated_on_queries
+                      ? ` (n=${liveMeta.scorecard.evaluated_on_queries} unseen cases)`
+                      : ''}
+                  </span>
+                )}
+              </>
+            )}
+
+            <span className={`ml-auto font-mono ${liveMeta.connected ? 'text-slate-500' : 'text-rose-700 font-bold'}`}>
+              {liveMeta.connected ? 'WS connected' : 'WS disconnected — reconnecting…'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      <main className="flex-1 max-w-7xl w-full mx-auto p-5 space-y-5">
+        {currentView === 'overview' && (
+          <>
+            <Alerts
+              alert={{
+                amount: activeCase.compromised_amount,
+                mule_account: activeCase.mule_account,
+                countdown: formatCountdown(secondsRemaining),
+                startIst: liveMeta.startIst,
+                endIst: liveMeta.endIst,
+                detectedAtIst: liveMeta.isLive ? activeCase.debit_time : null,
               }}
-              onSelectView={handleSelectView}
+              onOpenCase={() => setIsDispatchModalOpen(true)}
             />
-          )}
 
-          {/* VIEW 3: LIVE INCIDENTS */}
-          {currentView === 'live_operations' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                {/* Case Queue */}
-                <div className="lg:col-span-4 space-y-3">
-                  <div className="bg-white rounded-[4px] border border-slate-200 p-3.5 space-y-2.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                      <div>
-                        <h2 className="text-xs font-medium text-slate-900 uppercase">
-                          Live Incidents Queue
-                        </h2>
-                        <p className="text-[11px] text-slate-400 font-normal">Select active incident</p>
-                      </div>
-                      <span className="text-xs font-mono font-normal text-slate-500">
-                        {casesList.length} cases
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5 max-h-[600px] overflow-y-auto pr-1">
-                      {casesList.map((c) => {
-                        const isSelected = c.case_id === activeCaseId;
-                        return (
-                          <div
-                            key={c.case_id}
-                            onClick={() => setActiveCaseId(c.case_id)}
-                            className={`p-2.5 rounded-[4px] border transition-colors cursor-pointer ${
-                              isSelected
-                                ? 'border-slate-300 bg-slate-100/90 border-l-2 border-l-slate-900'
-                                : 'border-slate-200 hover:bg-slate-50 border-l-2 border-l-transparent'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-xs font-mono text-slate-900">
-                                {c.case_id}
-                              </span>
-                              <span className={`text-[11px] font-mono leading-none px-1.5 py-0.5 rounded-[3px] border ${
-                                c.status === 'Active' || c.status === 'In Progress'
-                                  ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                  : c.status === 'Under Monitoring'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                  : 'bg-slate-100 text-slate-600 border-slate-200'
-                              }`}>
-                                {c.status}
-                              </span>
-                            </div>
-
-                            <div className="mt-1 text-xs text-slate-800 font-normal">
-                              {c.victim_name} • ₹{Number(c.compromised_amount).toLocaleString('en-IN')}
-                            </div>
-
-                            <div className="text-[11px] text-slate-400 font-normal truncate mt-0.5">
-                              {c.crime_vector} • {c.debit_time}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+            {/* 4 Metric Cards — illustrative cell-level statistics, not model
+                output. Labelled so nobody reads them as measured results. */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Cell Statistics</h3>
+              <span className="text-[10px] text-slate-400 uppercase tracking-wider">Illustrative — not model output</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Active Cases</span>
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <span className="text-2xl font-bold text-slate-900 font-mono">4</span>
+                  <span className="text-xs text-rose-700 font-medium">2 Pending Dispatch</span>
                 </div>
+              </div>
 
-                {/* Dossier */}
-                <div className="lg:col-span-5 space-y-4">
-                  <SidebarLeft caseData={activeCase} />
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Total Defrauded Amount</span>
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <span className="text-2xl font-bold text-slate-900 font-mono">₹42.8 L</span>
+                  <span className="text-xs text-slate-500">6 flagged accounts</span>
                 </div>
+              </div>
 
-                {/* Right Actions */}
-                <div className="lg:col-span-3">
-                  <SidebarRight
-                    countdown={formatCountdown(secondsRemaining)}
-                    selectedAtmId={selectedAtmId}
-                    onSelectAtm={(atm) => setSelectedAtmId(atm.id)}
-                    predictedAtms={atms}
-                    onFeedback={handleFeedback}
-                  />
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Cases Resolved This Month</span>
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <span className="text-2xl font-bold text-slate-900 font-mono">18</span>
+                  <span className="text-xs text-slate-700 font-medium">₹31.4L Restricted</span>
+                </div>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-sm border border-slate-200">
+                <span className="text-[11px] font-medium text-slate-500 block uppercase tracking-wider">Patrol Units on Duty</span>
+                <div className="mt-1.5 flex items-baseline justify-between">
+                  <span className="text-2xl font-bold text-slate-900 font-mono">8</span>
+                  <span className="text-xs text-slate-600 font-medium">PCR Unit 12 Closest</span>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* VIEW 4: MAP */}
-          {(currentView === 'spatial_radar' || currentView === 'map') && (
-            <div className="space-y-4">
-              <div className="bg-white p-3.5 rounded-[4px] border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h1 className="text-xs font-medium text-slate-900 uppercase">
-                    Tactical Map
-                  </h1>
-                  <p className="text-xs text-slate-400 font-normal mt-0.5">
-                    OpenFreeMap & MapLibre Vector Engine • ATM Nodes & Patrol Routing
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-normal text-slate-500">Target Node:</span>
-                  <span className="text-xs font-mono font-medium bg-slate-50 px-2 py-1 rounded-[3px] border border-slate-200">
-                    {activeCase.predicted_atm}
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-[4px] border border-slate-200 p-4">
+            {/* Main Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 space-y-5">
+                <SidebarLeft caseData={activeCase} />
                 <CenterRadar
                   selectedAtmId={selectedAtmId}
-                  onSelectAtm={setSelectedAtmId}
+                  onSelectAtm={handleSelectAtm}
+                  originLat={liveMeta.originLat}
+                  originLon={liveMeta.originLon}
                   atms={atms}
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {atms.map((atm) => {
-                  const isSelected = selectedAtmId === atm.id;
-                  return (
-                    <div
-                      key={atm.id}
-                      onClick={() => setSelectedAtmId(atm.id)}
-                      className={`p-3 rounded-[4px] border transition-colors cursor-pointer bg-white ${
-                        isSelected
-                          ? 'border-slate-900 ring-1 ring-slate-900'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-5 h-5 rounded-[3px] bg-slate-900 text-white flex items-center justify-center font-mono text-[11px] font-medium">
-                            #{atm.rank}
-                          </span>
-                          <span className="font-medium text-xs text-slate-900">{atm.name}</span>
-                        </div>
-                        <span className="text-xs font-medium font-mono text-rose-700">{atm.probability}</span>
+              <div className="lg:col-span-4">
+                <SidebarRight
+                  countdown={formatCountdown(secondsRemaining)}
+                  windowIst={liveMeta.startIst && liveMeta.endIst
+                    ? `${liveMeta.startIst}–${liveMeta.endIst} IST` : null}
+                  selectedAtmId={selectedAtmId}
+                  onSelectAtm={handleSelectAtm}
+                  predictedAtms={atms}
+                  onFeedback={handleFeedback}
+                />
+              </div>
+            </div>
+
+            {/* Analytics Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 bg-white rounded-sm border border-slate-200 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Hourly Incident Log (Delhi NCR)</h3>
+                    <p className="text-xs text-slate-500">Reported volume over past 24 hours</p>
+                  </div>
+                  <span className="text-xs text-slate-500 font-mono">Total Today: 24 Cases</span>
+                </div>
+
+                <div className="h-40 flex items-end justify-between gap-2 pt-4 px-2 border-b border-slate-100">
+                  {[
+                    { time: '00:00', count: 1 },
+                    { time: '02:00', count: 0 },
+                    { time: '04:00', count: 0 },
+                    { time: '06:00', count: 1 },
+                    { time: '08:00', count: 2 },
+                    { time: '10:00', count: 4 },
+                    { time: '12:00', count: 3 },
+                    { time: '14:00', count: 5 },
+                    { time: '16:00', count: 4 },
+                    { time: '18:00', count: 6 },
+                    { time: '20:00', count: 8 },
+                    { time: '22:00', count: 9 },
+                  ].map((item, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                      <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {item.count}
+                      </span>
+                      <div
+                        className={`w-full rounded-none transition-all ${
+                          item.count >= 8 ? 'bg-rose-700' : item.count >= 4 ? 'bg-slate-700' : 'bg-slate-300'
+                        }`}
+                        style={{ height: `${Math.max(item.count * 10, 6)}%` }}
+                      />
+                      <span className="text-[10px] font-mono text-slate-500 mt-1">{item.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 bg-white rounded-sm border border-slate-200 p-4 space-y-3">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Fraud Category Distribution</h3>
+                  <p className="text-xs text-slate-500">Breakdown of reported incident vectors</p>
+                </div>
+
+                <div className="space-y-3 pt-1">
+                  {[
+                    { label: 'Screen Share APK Fraud', pct: 38, count: '9 cases', color: 'bg-rose-700' },
+                    { label: 'Impersonation Vishing Call', pct: 26, count: '6 cases', color: 'bg-slate-700' },
+                    { label: 'KYC Phishing SMS / Link', pct: 21, count: '5 cases', color: 'bg-amber-600' },
+                    { label: 'Card Cloning / Skimming', pct: 15, count: '4 cases', color: 'bg-slate-400' }
+                  ].map((type, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-slate-700">{type.label}</span>
+                        <span className="text-slate-500 font-mono">{type.pct}% ({type.count})</span>
                       </div>
-
-                      <div className="mt-1.5 text-xs text-slate-600 font-normal">{atm.location}</div>
-
-                      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-normal">
-                        <span>Distance: <strong className="text-slate-700 font-medium">{atm.distance}</strong></span>
-                        <span>ETA: <strong className="text-slate-700 font-medium">{atm.eta}</strong></span>
+                      <div className="w-full h-1.5 bg-slate-100 rounded-none overflow-hidden">
+                        <div className={`h-full ${type.color}`} style={{ width: `${type.pct}%` }} />
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          {/* VIEW 5: SPATIAL GIS RADAR (UBER H3) */}
-          {currentView === 'gis' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between bg-white px-4 py-3 rounded-[4px] border border-slate-200">
-                <div>
-                  <h2 className="text-xs font-medium text-slate-900 uppercase">Spatial GIS Command Center</h2>
-                  <p className="text-[11px] text-slate-400 font-normal">Live Spatio-Temporal Prediction Radar &amp; Uber H3 Hexagonal Danger Heatmap</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-mono px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-[3px]">
-                    Sector DL-CP (Connaught Place &amp; Delhi NCR)
-                  </span>
-                  <button
-                    onClick={() => setCurrentView('overview')}
-                    className="text-xs font-medium text-slate-600 hover:text-slate-900 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 rounded-[3px] border border-slate-200 transition-colors cursor-pointer"
-                  >
-                    ← Back to Overview
-                  </button>
-                </div>
+        {currentView === 'spatial_radar' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-white px-4 py-3 rounded-sm border border-slate-200">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Tactical Spatial GIS Command Center</h2>
+                <p className="text-xs text-slate-500">Live Spatio-Temporal Prediction Radar & Uber H3 Hexagonal Danger Heatmap</p>
               </div>
-              <GisDashboard />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-sm">
+                  Sector DL-CP (Connaught Place & Delhi NCR)
+                </span>
+                <button
+                  onClick={() => setCurrentView('overview')}
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-sm border border-slate-300 transition-colors"
+                >
+                  ← Back to Overview
+                </button>
+              </div>
             </div>
-          )}
+            <GisDashboard />
+          </div>
+        )}
 
-          {/* VIEW 6: INCIDENT LOGS & PATTERN ANALYTICS */}
-          {currentView === 'analytics' && (
-            <div className="space-y-4">
-              <div className="bg-white p-3.5 rounded-[4px] border border-slate-200 flex items-center justify-between">
-                <div>
-                  <h2 className="text-xs font-medium text-slate-900 uppercase">Investigation Logs &amp; Pattern Analytics</h2>
-                  <p className="text-[11px] text-slate-400 font-normal">Temporal incident velocity, syndicate withdrawal trends, and ATM cashout vectors</p>
+        {currentView === 'live_operations' && (
+          <div className="space-y-5">
+            <Alerts
+              alert={{
+                amount: activeCase.compromised_amount,
+                mule_account: activeCase.mule_account,
+                countdown: formatCountdown(secondsRemaining),
+                startIst: liveMeta.startIst,
+                endIst: liveMeta.endIst,
+                detectedAtIst: liveMeta.isLive ? activeCase.debit_time : null,
+              }}
+              onOpenCase={() => setIsDispatchModalOpen(true)}
+            />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 space-y-5">
+                <SidebarLeft caseData={activeCase} />
+                <CenterRadar
+                  selectedAtmId={selectedAtmId}
+                  onSelectAtm={handleSelectAtm}
+                  originLat={liveMeta.originLat}
+                  originLon={liveMeta.originLon}
+                  atms={atms}
+                />
+              </div>
+              <div className="lg:col-span-4">
+                <SidebarRight
+                  countdown={formatCountdown(secondsRemaining)}
+                  windowIst={liveMeta.startIst && liveMeta.endIst
+                    ? `${liveMeta.startIst}–${liveMeta.endIst} IST` : null}
+                  selectedAtmId={selectedAtmId}
+                  onSelectAtm={handleSelectAtm}
+                  predictedAtms={atms}
+                  onFeedback={handleFeedback}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'analytics' && (
+          <div className="space-y-5">
+            <div className="bg-white p-4 rounded-sm border border-slate-200 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Investigation Logs & Pattern Analytics</h2>
+                <p className="text-xs text-slate-500">Temporal incident velocity, syndicate withdrawal trends, and ATM cashout vectors</p>
+              </div>
+              <span className="text-xs font-mono text-slate-500">Total Logged Today: 24 Cases</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 bg-white rounded-sm border border-slate-200 p-4 space-y-3">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Hourly Incident Volume (Delhi NCR)</h3>
+                <div className="h-48 flex items-end justify-between gap-2 pt-4 px-2 border-b border-slate-100">
+                  {[
+                    { time: '00:00', count: 1 },
+                    { time: '02:00', count: 0 },
+                    { time: '04:00', count: 0 },
+                    { time: '06:00', count: 1 },
+                    { time: '08:00', count: 2 },
+                    { time: '10:00', count: 4 },
+                    { time: '12:00', count: 3 },
+                    { time: '14:00', count: 5 },
+                    { time: '16:00', count: 4 },
+                    { time: '18:00', count: 6 },
+                    { time: '20:00', count: 8 },
+                    { time: '22:00', count: 9 },
+                  ].map((item, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                      <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {item.count}
+                      </span>
+                      <div
+                        className={`w-full rounded-none transition-all ${
+                          item.count >= 8 ? 'bg-rose-700' : item.count >= 4 ? 'bg-slate-700' : 'bg-slate-300'
+                        }`}
+                        style={{ height: `${Math.max(item.count * 10, 6)}%` }}
+                      />
+                      <span className="text-[10px] font-mono text-slate-500 mt-1">{item.time}</span>
+                    </div>
+                  ))}
                 </div>
-                <span className="text-[11px] font-mono text-slate-500">Total Logged Today: 24 Cases</span>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                <div className="lg:col-span-8 bg-white rounded-[4px] border border-slate-200 p-3.5 space-y-3">
-                  <h3 className="font-medium text-slate-900 text-xs uppercase">Hourly Incident Volume (Delhi NCR)</h3>
-                  <div className="h-48 flex items-end justify-between gap-2 pt-4 px-2 border-b border-slate-100">
-                    {[
-                      { time: '00:00', count: 1 },
-                      { time: '02:00', count: 0 },
-                      { time: '04:00', count: 0 },
-                      { time: '06:00', count: 1 },
-                      { time: '08:00', count: 2 },
-                      { time: '10:00', count: 4 },
-                      { time: '12:00', count: 3 },
-                      { time: '14:00', count: 5 },
-                      { time: '16:00', count: 4 },
-                      { time: '18:00', count: 6 },
-                      { time: '20:00', count: 8 },
-                      { time: '22:00', count: 9 },
-                    ].map((item, i) => (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
-                        <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {item.count}
-                        </span>
-                        <div
-                          className={`w-full rounded-none transition-all ${
-                            item.count >= 8 ? 'bg-rose-700' : item.count >= 4 ? 'bg-slate-700' : 'bg-slate-300'
-                          }`}
-                          style={{ height: `${Math.max(item.count * 10, 6)}%` }}
-                        />
-                        <span className="text-[10px] font-mono text-slate-500 mt-1">{item.time}</span>
+              <div className="lg:col-span-4 bg-white rounded-sm border border-slate-200 p-4 space-y-3">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Modus Operandi Distribution</h3>
+                <div className="space-y-3 pt-2">
+                  {[
+                    { label: 'Screen Share APK Fraud', pct: 38, count: '9 cases', color: 'bg-rose-700' },
+                    { label: 'Impersonation Vishing Call', pct: 26, count: '6 cases', color: 'bg-slate-700' },
+                    { label: 'KYC Phishing SMS / Link', pct: 21, count: '5 cases', color: 'bg-amber-600' },
+                    { label: 'Card Cloning / Skimming', pct: 15, count: '4 cases', color: 'bg-slate-400' }
+                  ].map((type, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-slate-700">{type.label}</span>
+                        <span className="text-slate-500 font-mono">{type.pct}% ({type.count})</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="lg:col-span-4 bg-white rounded-[4px] border border-slate-200 p-3.5 space-y-3">
-                  <h3 className="font-medium text-slate-900 text-xs uppercase">Modus Operandi Distribution</h3>
-                  <div className="space-y-3 pt-2">
-                    {[
-                      { label: 'Screen Share APK Fraud', pct: 38, count: '9 cases', color: 'bg-rose-700' },
-                      { label: 'Impersonation Vishing Call', pct: 26, count: '6 cases', color: 'bg-slate-700' },
-                      { label: 'KYC Phishing SMS / Link', pct: 21, count: '5 cases', color: 'bg-amber-600' },
-                      { label: 'Card Cloning / Skimming', pct: 15, count: '4 cases', color: 'bg-slate-400' }
-                    ].map((type, i) => (
-                      <div key={i} className="space-y-1">
-                        <div className="flex justify-between text-xs font-medium">
-                          <span className="text-slate-700">{type.label}</span>
-                          <span className="text-slate-500 font-mono">{type.pct}% ({type.count})</span>
-                        </div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-none overflow-hidden">
-                          <div className={`h-full ${type.color}`} style={{ width: `${type.pct}%` }} />
-                        </div>
+                      <div className="w-full h-1.5 bg-slate-100 rounded-none overflow-hidden">
+                        <div className={`h-full ${type.color}`} style={{ width: `${type.pct}%` }} />
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          )}
-        </main>
-      </div>
+          </div>
+        )}
+      </main>
 
-      {/* Police Section 91 CrPC Dispatch Order Modal */}
       <PoliceDispatchModal
         isOpen={isDispatchModalOpen}
         onClose={() => setIsDispatchModalOpen(false)}
@@ -631,7 +661,7 @@ const CommandCenter = () => {
           compromised_amount: activeCase.compromised_amount,
           assigned_patrol: activeCase.assigned_patrol,
           predicted_atm: activeCase.predicted_atm,
-          ranked_atms: atms.map((a) => ({
+          ranked_atms: atms.map(a => ({
             rank: a.rank,
             name: a.name,
             address: a.location,

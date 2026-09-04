@@ -3,163 +3,132 @@ Project Drishti — ML Engine
 File: ml_engine/models/survival_time.py
 Role: Role 2 — ML/AI Engineer
 
-WHEN Engine: Predicts the time window within which the mule runner
-will attempt a cash withdrawal, using Survival Analysis.
+WHEN Engine: predicts the time window in which the mule runner will attempt a
+cash withdrawal, using Survival Analysis on right-censored data.
 
-Phase 1 (Immediate): Smart statistical fallback (no training needed).
-Phase 2 (After Role 5's data is ready): Train a real KaplanMeierFitter.
+WHY SURVIVAL ANALYSIS AND NOT PLAIN REGRESSION
+----------------------------------------------
+Roughly 18% of flagged fraud transfers never produce an observed withdrawal —
+the account gets frozen, or the runner aborts. Those rows are *right-censored*:
+we know the cashout hadn't happened by the time we stopped watching, not that it
+never would. Dropping them biases every estimate toward fast cashouts; imputing
+a fake duration for them biases it the other way. Survival analysis is the only
+formulation that uses censored rows correctly, and it natively outputs an
+interval rather than a single number — which is what a dispatch window is.
+
+THREE-TIER PREDICTION LADDER (each tier degrades gracefully)
+------------------------------------------------------------
+  Tier 1  Cox Proportional Hazards  — window conditioned on THIS case's
+          covariates (amount, IST hour, mule tier, distance to nearest cash
+          point). Different cases get different windows.
+  Tier 2  Kaplan-Meier              — population-level window. Same for every
+          case, but empirically grounded in the observed data.
+  Tier 3  Statistical prior         — hardcoded research-based percentiles, so
+          the system still answers on a fresh clone with no trained weights.
+
+Tier 2 alone was the previous behaviour and it is worth being explicit about the
+weakness: a Kaplan-Meier fitter takes no inputs, so it returns an identical
+window for a ₹50,001 daytime transfer and a ₹25 lakh 3 a.m. transfer. That is a
+constant presented as a prediction. Cox PH fixes it.
 """
 
 import os
-import math
 import pickle
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 WEIGHTS_DIR = os.path.join(os.path.dirname(__file__), "..", "weights")
-MODEL_PATH = os.path.join(WEIGHTS_DIR, "survival_model.pkl")
+KM_MODEL_PATH = os.path.join(WEIGHTS_DIR, "survival_model.pkl")
+COX_MODEL_PATH = os.path.join(WEIGHTS_DIR, "cox_model.pkl")
 HISTORICAL_TX_PATH = os.path.join(
     os.path.dirname(__file__), "..", "..", "simulation", "data", "historical_transactions.csv"
 )
 
-# ─── Statistical priors from cybercrime research & SIH blueprint ──────────────
-# These are the fallback percentiles when no trained model is available.
-# Based on known fraud behavior: most mule cashouts happen within 20-60 min.
-_PRIOR_P25_MINS = 22.0   # 25th percentile: earliest likely cashout
-_PRIOR_P75_MINS = 47.0   # 75th percentile: latest likely cashout
-_PRIOR_CONFIDENCE = 0.58  # Confidence when using prior (lower than trained model)
+IST = timezone(timedelta(hours=5, minutes=30))
 
-# ─── Module-level model cache ─────────────────────────────────────────────────
+# ─── Tier-3 statistical priors (cybercrime research + blueprint) ──────────────
+_PRIOR_P25_MINS = 22.0
+_PRIOR_P75_MINS = 47.0
+_PRIOR_CONFIDENCE = 0.55
+
+# ─── Module-level caches ──────────────────────────────────────────────────────
 _kmf_model = None
+_cox_model = None
+_km_checked = False
+_cox_checked = False
 
 
-def _load_model() -> Optional[Any]:
-    """Lazy-loads the trained KaplanMeierFitter from disk."""
-    global _kmf_model
-    if _kmf_model is not None:
-        return _kmf_model
-    if os.path.exists(MODEL_PATH):
-        try:
-            with open(MODEL_PATH, "rb") as f:
-                _kmf_model = pickle.load(f)
-            print(f"[SurvivalTime] Loaded trained KM model from {MODEL_PATH}")
-            return _kmf_model
-        except Exception as e:
-            print(f"[SurvivalTime] WARNING: Could not load model: {e}")
-    return None
+def _load_km():
+    global _kmf_model, _km_checked
+    if _kmf_model is None and not _km_checked:
+        _km_checked = True
+        if os.path.exists(KM_MODEL_PATH):
+            try:
+                with open(KM_MODEL_PATH, "rb") as f:
+                    _kmf_model = pickle.load(f)
+                print(f"[SurvivalTime] Loaded Kaplan-Meier model from {KM_MODEL_PATH}")
+            except Exception as e:
+                print(f"[SurvivalTime] WARNING: Kaplan-Meier load failed: {e}")
+    return _kmf_model
 
 
-def prepare_survival_data(csv_path: str = HISTORICAL_TX_PATH):
-    """
-    Loads historical_transactions.csv and builds the survival analysis dataset.
+def _load_cox():
+    global _cox_model, _cox_checked
+    if _cox_model is None and not _cox_checked:
+        _cox_checked = True
+        if os.path.exists(COX_MODEL_PATH):
+            try:
+                with open(COX_MODEL_PATH, "rb") as f:
+                    _cox_model = pickle.load(f)
+                print(f"[SurvivalTime] Loaded Cox PH model from {COX_MODEL_PATH}")
+            except Exception as e:
+                print(f"[SurvivalTime] WARNING: Cox PH load failed: {e}")
+    return _cox_model
 
-    Required CSV columns:
-        - mule_account_id
-        - transfer_timestamp   (ISO format: "2026-01-15T14:23:00")
-        - withdrawal_timestamp (ISO format, or empty if not yet withdrawn)
 
-    Returns:
-        pandas DataFrame with columns: ['duration', 'event_occurred']
-        duration        = minutes between transfer and withdrawal
-        event_occurred  = 1 if withdrawal happened, 0 if censored
-    """
+def _parse_ts(ts: Any) -> datetime:
+    """Parses an ISO-ish timestamp into a tz-aware UTC datetime."""
     try:
-        import pandas as pd
-    except ImportError:
-        raise ImportError("pandas is required for training. Run: pip install pandas")
-
-    df = pd.read_csv(csv_path)
-
-    df["transfer_ts"] = pd.to_datetime(df["transfer_timestamp"])
-    df["withdraw_ts"] = pd.to_datetime(df["withdrawal_timestamp"], errors="coerce")
-
-    df["event_occurred"] = df["withdraw_ts"].notna().astype(int)
-
-    # For observed events: duration = time from transfer to actual withdrawal
-    df["duration"] = (df["withdraw_ts"] - df["transfer_ts"]).dt.total_seconds() / 60
-
-    # FIX: For RIGHT-CENSORED rows (no withdrawal observed), the correct
-    # survival analysis duration is the time elapsed from transfer to the
-    # study end (i.e., now). Using max_observed or a constant 120 is
-    # statistically invalid — it inflates the KM curve and underestimates
-    # survival probability at early time points.
-    study_end = pd.Timestamp.utcnow().tz_localize(None)  # naive UTC
-    df["transfer_ts"] = df["transfer_ts"].dt.tz_localize(None)  # ensure naive for comparison
-    censored_mask = df["event_occurred"] == 0
-    df.loc[censored_mask, "duration"] = (
-        (study_end - df.loc[censored_mask, "transfer_ts"]).dt.total_seconds() / 60
-    )
-
-    # Clip to [1, 480] minutes — durations outside this range are likely data errors
-    # (0 min = instantaneous withdrawal is impossible; 480 min = 8 hours is a generous cap)
-    df["duration"] = df["duration"].clip(lower=1.0, upper=480.0)
-    df = df[df["duration"].notna() & (df["duration"] > 0)]
-
-    print(f"[SurvivalTime] Prepared {len(df)} records | "
-          f"Events: {df['event_occurred'].sum()} | Censored: {(df['event_occurred'] == 0).sum()}")
-    return df[["duration", "event_occurred"]]
+        dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+    except Exception:
+        return datetime.now(timezone.utc)
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
 
 
-def train_survival_model(df, save: bool = True):
-    """
-    Fits a KaplanMeierFitter on the prepared survival dataset.
-
-    Args:
-        df: DataFrame with 'duration' and 'event_occurred' columns.
-        save: If True, saves the fitted model to ml_engine/weights/.
-
-    Returns:
-        Fitted KaplanMeierFitter object.
-    """
+def _percentile_from_km(kmf, p: float) -> float:
+    """Time at which the survival function crosses S(t) = 1 - p."""
     try:
-        from lifelines import KaplanMeierFitter
-    except ImportError:
-        raise ImportError("lifelines is required. Run: pip install lifelines")
-
-    kmf = KaplanMeierFitter()
-    kmf.fit(
-        durations=df["duration"],
-        event_observed=df["event_occurred"],
-        label="Mule Withdrawal Time (mins)",
-    )
-
-    if save:
-        os.makedirs(WEIGHTS_DIR, exist_ok=True)
-        with open(MODEL_PATH, "wb") as f:
-            pickle.dump(kmf, f)
-        print(f"[SurvivalTime] Model saved to {MODEL_PATH}")
-
-    # Print key percentile summary
-    median = kmf.median_survival_time_
-    print(f"[SurvivalTime] Trained. Median cashout time: {median:.1f} minutes")
-    return kmf
-
-
-def _extract_percentile_from_kmf(kmf, percentile: float) -> float:
-    """
-    Extracts the time (in minutes) at which the survival function
-    crosses a given survival probability level.
-
-    For example, percentile=0.25 finds T where S(T) = 0.75
-    (meaning 25% of mules have already withdrawn by time T).
-
-    Args:
-        kmf: Fitted KaplanMeierFitter.
-        percentile: Float between 0 and 1 (e.g., 0.25 for 25th percentile).
-    Returns:
-        Time in minutes (float).
-    """
-    import numpy as np
+        val = float(kmf.percentile(1.0 - p))
+        if val == val and val > 0:  # not NaN
+            return val
+    except Exception:
+        pass
     sf = kmf.survival_function_
-    times = sf.index.values
-    probs = sf.iloc[:, 0].values  # S(t) values
+    times, probs = sf.index.values, sf.iloc[:, 0].values
+    hit = times[probs <= (1.0 - p)]
+    return float(hit[0]) if len(hit) else float(times[-1])
 
-    target_survival = 1.0 - percentile  # S(t) = 1 - CDF
-    # Find the first time where S(t) drops to or below target
-    candidates = times[probs <= target_survival]
-    if len(candidates) == 0:
-        return float(times[-1])  # Return last observed time if never reached
-    return float(candidates[0])
+
+def _percentiles_from_cox(cph, covariates: Dict[str, float], low: float, high: float):
+    """
+    Per-case percentiles from the Cox PH partial-hazard survival curve.
+    Returns (t_low, t_high) in minutes, or None if the model can't score this row.
+    """
+    import pandas as pd
+
+    needed = list(getattr(cph, "params_", pd.Series(dtype=float)).index)
+    if not needed:
+        return None
+    row = pd.DataFrame([{k: float(covariates.get(k, 0.0)) for k in needed}])
+    sf = cph.predict_survival_function(row)
+    times = sf.index.values
+    probs = sf.iloc[:, 0].values
+
+    def cross(p: float) -> float:
+        hit = times[probs <= (1.0 - p)]
+        return float(hit[0]) if len(hit) else float(times[-1])
+
+    return cross(low), cross(high)
 
 
 def predict_time_window(
@@ -167,77 +136,153 @@ def predict_time_window(
     mule_account_id: str = "",
     low_percentile: float = 0.25,
     high_percentile: float = 0.75,
+    amount: float = 0.0,
+    mule_tier: int = 1,
+    nearest_travel_mins: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
-    Predicts the cashout time window for a mule transaction.
+    Predicts the cashout window for one mule transaction.
 
     Args:
-        transaction_timestamp: ISO format string of when the transfer occurred.
-        mule_account_id: The mule's account ID (for future per-mule models).
-        low_percentile:  Lower bound of the prediction interval (default 25%).
-        high_percentile: Upper bound of the prediction interval (default 75%).
+        transaction_timestamp: ISO timestamp of the incoming transfer.
+        mule_account_id:       Mule account ID (reserved for per-mule models).
+        low_percentile:        Lower bound of the interval (default 25%).
+        high_percentile:       Upper bound of the interval (default 75%).
+        amount:                Compromised amount in ₹ (Cox covariate).
+        mule_tier:             1 = direct from victim, 2 = mule-to-mule hop.
+        nearest_travel_mins:   Road minutes to the closest reachable cash point.
 
     Returns:
-        dict with keys: start, end, minutes_from_now, confidence
+        {start, end, start_ist, end_ist, minutes_from_now, window_minutes,
+         confidence, model_source}
+        `start`/`end` are UTC ISO strings (machine-facing).
+        `start_ist`/`end_ist` are 24-hour IST strings (officer-facing).
     """
-    from datetime import timezone
-    try:
-        clean_ts = transaction_timestamp.replace("Z", "+00:00")
-        tx_dt = datetime.fromisoformat(clean_ts)
-        if tx_dt.tzinfo is not None:
-            tx_dt = tx_dt.astimezone(timezone.utc)
-        else:
-            tx_dt = tx_dt.replace(tzinfo=timezone.utc)
-    except Exception:
-        tx_dt = datetime.now(timezone.utc)
-
+    tx_dt = _parse_ts(transaction_timestamp)
     now = datetime.now(timezone.utc)
 
-    # ── Try trained model ──────────────────────────────────────────────────
-    model = _load_model()
-    if model is not None:
+    ist_hour = tx_dt.astimezone(IST).hour
+    t_low = t_high = None
+    source = "StatisticalPrior"
+    confidence = _PRIOR_CONFIDENCE
+
+    # ── Tier 1: Cox PH (case-specific) ───────────────────────────────────────
+    cph = _load_cox()
+    if cph is not None:
         try:
-            t_low  = _extract_percentile_from_kmf(model, low_percentile)
-            t_high = _extract_percentile_from_kmf(model, high_percentile)
-            confidence = round(high_percentile - low_percentile + 0.2, 2)
-            print(f"[SurvivalTime] Model prediction: window = {t_low:.0f} – {t_high:.0f} mins")
+            covariates = {
+                "amount_lakhs": amount / 100000.0,
+                "ist_hour": float(ist_hour),
+                "is_night": 1.0 if (ist_hour >= 22 or ist_hour < 5) else 0.0,
+                "mule_tier": float(mule_tier),
+                "travel_mins": float(nearest_travel_mins) if nearest_travel_mins is not None else 8.0,
+            }
+            res = _percentiles_from_cox(cph, covariates, low_percentile, high_percentile)
+            if res and res[1] > res[0] > 0:
+                t_low, t_high = res
+                source = "CoxProportionalHazards"
+                # Cox uses case covariates, so we credit it slightly higher
+                # confidence than the population-level KM curve.
+                confidence = round(min(0.92, high_percentile - low_percentile + 0.35), 2)
+                print(f"[SurvivalTime] Cox PH window: {t_low:.0f}-{t_high:.0f} min "
+                      f"(amount=₹{amount:,.0f}, IST hour={ist_hour}, tier={mule_tier})")
         except Exception as e:
-            print(f"[SurvivalTime] Model prediction failed: {e}. Using statistical prior.")
-            t_low, t_high, confidence = _PRIOR_P25_MINS, _PRIOR_P75_MINS, _PRIOR_CONFIDENCE
-    else:
-        # ── Fallback: Statistical prior from cybercrime research ──────────
-        print("[SurvivalTime] No trained model. Using statistical prior window.")
-        t_low, t_high, confidence = _PRIOR_P25_MINS, _PRIOR_P75_MINS, _PRIOR_CONFIDENCE
+            print(f"[SurvivalTime] Cox PH prediction failed ({e}) - falling back to Kaplan-Meier.")
+
+    # ── Tier 2: Kaplan-Meier (population) ────────────────────────────────────
+    if t_low is None:
+        kmf = _load_km()
+        if kmf is not None:
+            try:
+                t_low = _percentile_from_km(kmf, low_percentile)
+                t_high = _percentile_from_km(kmf, high_percentile)
+                source = "KaplanMeier"
+                confidence = round(high_percentile - low_percentile + 0.2, 2)
+                print(f"[SurvivalTime] Kaplan-Meier window: {t_low:.0f}-{t_high:.0f} min")
+            except Exception as e:
+                print(f"[SurvivalTime] Kaplan-Meier prediction failed ({e}).")
+
+    # ── Tier 3: statistical prior ────────────────────────────────────────────
+    if t_low is None or t_high is None or not (t_high > t_low > 0):
+        t_low, t_high = _PRIOR_P25_MINS, _PRIOR_P75_MINS
+        source = "StatisticalPrior"
+        confidence = _PRIOR_CONFIDENCE
+        print("[SurvivalTime] Using statistical prior window (no usable trained model).")
 
     window_start = tx_dt + timedelta(minutes=t_low)
-    window_end   = tx_dt + timedelta(minutes=t_high)
-
-    # Time remaining from NOW until window starts (urgency for police)
-    minutes_from_now = max(0, int((window_start - now).total_seconds() / 60))
+    window_end = tx_dt + timedelta(minutes=t_high)
 
     return {
         "start": window_start.strftime("%Y-%m-%dT%H:%M:%S"),
         "end": window_end.strftime("%Y-%m-%dT%H:%M:%S"),
-        "minutes_from_now": minutes_from_now,
+        "start_ist": window_start.astimezone(IST).strftime("%H:%M"),
+        "end_ist": window_end.astimezone(IST).strftime("%H:%M"),
+        "minutes_from_now": max(0, int((window_start - now).total_seconds() / 60)),
+        "window_minutes": int(round(t_high - t_low)),
         "confidence": confidence,
-        "model_source": "KaplanMeier" if model else "StatisticalPrior",
+        "model_source": source,
     }
+
+
+# ─── Training helpers (kept for the notebook / retraining path) ────────────────
+def prepare_survival_data(csv_path: str = HISTORICAL_TX_PATH):
+    """
+    Builds the survival dataset from historical_transactions.csv.
+
+    Returns a DataFrame with ['duration', 'event_occurred'].
+    Censored rows get duration = transfer -> study end (now), which is the only
+    statistically valid choice; a constant would bias the KM curve.
+    """
+    import pandas as pd
+
+    df = pd.read_csv(csv_path)
+    df["transfer_ts"] = pd.to_datetime(df["transfer_timestamp"], errors="coerce")
+    df["withdraw_ts"] = pd.to_datetime(df["withdrawal_timestamp"], errors="coerce")
+    df["event_occurred"] = df["withdraw_ts"].notna().astype(int)
+    df["duration"] = (df["withdraw_ts"] - df["transfer_ts"]).dt.total_seconds() / 60.0
+
+    study_end = pd.Timestamp.now(tz="UTC").tz_localize(None)
+    transfer_naive = (df["transfer_ts"].dt.tz_localize(None)
+                      if df["transfer_ts"].dt.tz is not None else df["transfer_ts"])
+    censored = df["event_occurred"] == 0
+    df.loc[censored, "duration"] = (
+        (study_end - transfer_naive[censored]).dt.total_seconds() / 60.0
+    )
+    df["duration"] = df["duration"].clip(lower=1.0, upper=480.0)
+    df = df[df["duration"].notna() & (df["duration"] > 0)]
+
+    print(f"[SurvivalTime] Prepared {len(df)} records | "
+          f"events: {df['event_occurred'].sum()} | "
+          f"censored: {(df['event_occurred'] == 0).sum()}")
+    return df[["duration", "event_occurred"]]
+
+
+def train_survival_model(df, save: bool = True):
+    """Fits a KaplanMeierFitter. For the full pipeline use ml_engine/train_models.py."""
+    from lifelines import KaplanMeierFitter
+
+    kmf = KaplanMeierFitter()
+    kmf.fit(durations=df["duration"], event_observed=df["event_occurred"],
+            label="Mule Withdrawal Time (mins)")
+    if save:
+        os.makedirs(WEIGHTS_DIR, exist_ok=True)
+        with open(KM_MODEL_PATH, "wb") as f:
+            pickle.dump(kmf, f)
+        print(f"[SurvivalTime] Model saved to {KM_MODEL_PATH}")
+    print(f"[SurvivalTime] Median cashout time: {kmf.median_survival_time_:.1f} minutes")
+    return kmf
 
 
 # ─── Self-test ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    tx_time = datetime.now(timezone.utc).isoformat()
-    print(f"\n[TEST] Transaction timestamp: {tx_time}")
-
-    result = predict_time_window(
-        transaction_timestamp=tx_time,
-        mule_account_id="ACC_MULE_0042",
-    )
-
-    print(f"\n[RESULTS] Predicted Cashout Window:")
-    print(f"  Window Start     : {result['start']}")
-    print(f"  Window End       : {result['end']}")
-    print(f"  Minutes From Now : {result['minutes_from_now']} min")
-    print(f"  Confidence       : {result['confidence']}")
-    print(f"  Model Source     : {result['model_source']}")
-    print(f"\n  --> Police have ~{result['minutes_from_now']} minutes to intercept!")
+    now_iso = datetime.now(timezone.utc).isoformat()
+    print("\n[TEST] Same timestamp, different case profiles - windows should DIFFER "
+          "if Cox PH is active:\n")
+    for label, kw in [
+        ("Small daytime transfer, tier 1", dict(amount=60000, mule_tier=1, nearest_travel_mins=12)),
+        ("Large night transfer, tier 2  ", dict(amount=2400000, mule_tier=2, nearest_travel_mins=3)),
+    ]:
+        r = predict_time_window(transaction_timestamp=now_iso,
+                               mule_account_id="ACC_MULE_0042", **kw)
+        print(f"  {label} -> {r['start_ist']}-{r['end_ist']} IST "
+              f"| {r['window_minutes']} min wide | conf {r['confidence']} | {r['model_source']}")

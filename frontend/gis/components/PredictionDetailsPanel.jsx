@@ -27,17 +27,31 @@ export const PredictionDetailsPanel = ({
   }
 
   const rank = selectedTarget.rank || 1;
-  const scorePercent = selectedTarget.scorePercent ?? Math.round((selectedTarget.riskScore || 0.8) * 100);
+  // Every `||` default in this block used to manufacture a plausible-looking
+  // number when the real one was missing: an 80% risk score, a "20-40 mins"
+  // window, a "15 mins" ETA, and three generic sentences dressed as model
+  // reasoning. On a dispatch panel that is not a graceful degradation, it is a
+  // fabricated prediction. Missing data now reads as missing.
+  const scorePercent = selectedTarget.scorePercent
+    ?? (typeof selectedTarget.riskScore === 'number' && selectedTarget.hasRealScore !== false
+      ? Math.round(selectedTarget.riskScore * 100)
+      : null);
+  const tier = String(selectedTarget.riskTier || '').toUpperCase();
   const type = selectedTarget.type || 'ATM';
-  const withdrawalWindow = selectedTarget.expectedWindow || activeAlert?.withdrawalWindow || '20–40 mins';
-  const travelTime = selectedTarget.travelTime || '15 mins';
+  // The interception window belongs to the case, not to a single ATM.
+  const withdrawalWindow = selectedTarget.expectedWindow || activeAlert?.withdrawalWindow || null;
+  const travelTime = selectedTarget.travelTime || null;
 
-  // Dynamic explanations: merge target-specific reasons or alert-level explanations
-  const explanations = selectedTarget.explanations || selectedTarget.reasons || activeAlert?.explanation || [
-    'Matches high-frequency mule cashout corridor',
-    'Historical high-risk withdrawal volume detected nearby within 48h',
-    'Fastest transit access route from origin incident coordinates'
-  ];
+  // Real SHAP attributions for this target; alert-level reasons as a second
+  // choice. No invented third option.
+  const rawExplanations = selectedTarget.explanations
+    || selectedTarget.reasons
+    || (selectedTarget.explanation ? [selectedTarget.explanation] : null)
+    || activeAlert?.explanation
+    || [];
+  const explanations = (Array.isArray(rawExplanations) ? rawExplanations : [rawExplanations])
+    .filter((r) => typeof r === 'string' && r.trim().length > 0);
+
 
   // Tactical badge styling
   let typeBadge = { label: 'ATM', bg: 'bg-red-500/20 text-red-400 border-red-500/40' };
@@ -81,12 +95,15 @@ export const PredictionDetailsPanel = ({
         {/* Risk Percentage Box */}
         <div className="flex-shrink-0 text-right bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-700">
           <div className={`text-base font-black font-mono leading-none ${
-            scorePercent >= 85 ? 'text-red-400' : scorePercent >= 70 ? 'text-amber-400' : 'text-cyan-400'
+            tier === 'CRITICAL' ? 'text-red-400'
+              : tier === 'HIGH' ? 'text-amber-400'
+              : tier === 'MEDIUM' ? 'text-yellow-300'
+              : 'text-emerald-400'
           }`}>
-            {scorePercent}%
+            {scorePercent !== null ? `${scorePercent}%` : '—'}
           </div>
           <div className="text-[9px] font-mono text-slate-400 uppercase tracking-tight mt-0.5">
-            Risk Score
+            {tier ? `${tier} risk` : 'Cash-out prob.'}
           </div>
         </div>
       </div>
@@ -96,13 +113,13 @@ export const PredictionDetailsPanel = ({
         <div className="bg-slate-900/70 p-2 rounded-lg border border-slate-800">
           <span className="text-[10px] text-slate-400 uppercase block">Expected Cash-Out</span>
           <span className="font-bold text-cyan-300 text-xs mt-0.5 block">
-            ⏱ {withdrawalWindow}
+            {withdrawalWindow ? `⏱ ${withdrawalWindow}` : <span className="text-slate-500">not predicted</span>}
           </span>
         </div>
         <div className="bg-slate-900/70 p-2 rounded-lg border border-slate-800">
           <span className="text-[10px] text-slate-400 uppercase block">Estimated Travel ETA</span>
           <span className="font-bold text-amber-300 text-xs mt-0.5 block">
-            🚗 ~{travelTime}
+            {travelTime ? `🚗 ~${travelTime}` : <span className="text-slate-500">unavailable</span>}
           </span>
         </div>
       </div>
@@ -114,12 +131,16 @@ export const PredictionDetailsPanel = ({
           <span>Why This Location?</span>
         </div>
         <ul className="space-y-1 text-[11px] text-slate-300 font-sans leading-snug">
-          {explanations.map((reason, idx) => (
+          {explanations.length > 0 ? explanations.map((reason, idx) => (
             <li key={idx} className="flex items-start gap-1.5 bg-slate-900/40 p-1.5 rounded border border-slate-800/80">
               <span className="text-cyan-400 text-xs mt-[-1px] font-mono">▸</span>
               <span>{reason}</span>
             </li>
-          ))}
+          )) : (
+            <li className="text-slate-500 italic p-1.5">
+              No attribution available for this target.
+            </li>
+          )}
         </ul>
       </div>
 

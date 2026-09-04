@@ -1,0 +1,95 @@
+{
+  "generated_at": "2026-09-04T05:59:35Z",
+  "when_engine": {
+    "n_events": 3559,
+    "n_observed": 2889,
+    "n_censored": 670,
+    "km_median_mins": 19.68,
+    "window_p25_mins": 14.5,
+    "window_p75_mins": 29.9,
+    "cox": {
+      "concordance_index": 0.6127,
+      "covariates": [
+        "amount_lakhs",
+        "ist_hour",
+        "is_night",
+        "mule_tier",
+        "travel_mins"
+      ]
+    }
+  },
+  "where_engine": {
+    "n_queries_total": 2889,
+    "n_queries_train": 2312,
+    "n_queries_test": 577,
+    "avg_candidates_per_query": 111.6,
+    "best_iteration": 10,
+    "feature_importance": {
+      "h3_fraud_density": 48,
+      "mule_network_affinity": 48,
+      "travel_time_mins": 47,
+      "historical_fraud_count": 45,
+      "distance_km": 43,
+      "atm_type_encoded": 22,
+      "mule_atm_affinity": 21,
+      "hour_of_day": 13,
+      "amount_lakhs": 13,
+      "is_night": 0,
+      "is_weekend": 0
+    },
+    "spatial_splits": 90,
+    "evaluation": {
+      "model": {
+        "top1_hit_rate": 0.5511,
+        "top3_hit_rate": 0.8163,
+        "top5_hit_rate": 0.8943,
+        "top10_hit_rate": 0.9584,
+        "ndcg@5": 0.7413,
+        "mrr": 0.7014,
+        "n_queries": 577
+      },
+      "random": {
+        "top1_hit_rate": 0.0087,
+        "top3_hit_rate": 0.0364,
+        "top5_hit_rate": 0.0607,
+        "top10_hit_rate": 0.1248,
+        "ndcg@5": 0.0343,
+        "mrr": 0.0548,
+        "n_queries": 577
+      },
+      "nearest": {
+        "top1_hit_rate": 0.1404,
+        "top3_hit_rate": 0.4367,
+        "top5_hit_rate": 0.6638,
+        "top10_hit_rate": 0.8908,
+        "ndcg@5": 0.3985,
+        "mrr": 0.35,
+        "n_queries": 577
+      },
+      "fraud": {
+        "top1_hit_rate": 0.0537,
+        "top3_hit_rate": 0.2184,
+        "top5_hit_rate": 0.2808,
+        "top10_hit_rate": 0.4541,
+        "ndcg@5": 0.1819,
+        "mrr": 0.1968,
+        "n_queries": 577
+      },
+      "heuristic": {
+        "top1_hit_rate": 0.2738,
+        "top3_hit_rate": 0.3692,
+        "top5_hit_rate": 0.4593,
+        "top10_hit_rate": 0.7539,
+        "ndcg@5": 0.3603,
+        "mrr": 0.378,
+        "n_queries": 577
+      }
+    },
+    "calibration": {
+      "temperature": 0.18,
+      "mean_claimed_top1_probability": 0.5012,
+      "actual_top1_hit_rate": 0.5529,
+      "calibration_gap": 0.0517
+    }
+  }
+}

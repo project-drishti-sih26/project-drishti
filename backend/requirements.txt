@@ -10,3 +10,14 @@ python-multipart>=0.0.6
 websockets>=11.0.0
 httpx>=0.24.0
 python-dotenv>=1.0.0
+
+# ── ML Engine dependencies ────────────────────────────────────────────────────
+# The backend imports ml_engine.pipelines.inference_pipeline in-process, so these
+# are runtime requirements of the API, not just of the training scripts. Without
+# them the trigger service silently falls through to the degraded heuristic.
+numpy>=1.24.0
+pandas>=2.0.0
+lightgbm>=4.0.0        # LambdaMART ranker (WHERE engine)
+lifelines>=0.27.0      # Cox PH + Kaplan-Meier (WHEN engine)
+h3>=4.0.0              # H3 spatial indexing for two-stage candidate retrieval
+shap>=0.44.0           # SHAP attributions for the dispatch explanations

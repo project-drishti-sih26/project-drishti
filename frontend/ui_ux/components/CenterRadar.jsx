@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import MapRadar from '../../gis/components/MapRadar.jsx';
 
 /**
- * CenterRadar Component
- * Live Location Map — Delhi NCR with interactive MapLibre vector map and hex grid view toggle.
+ * CenterRadar Component (Role 4 UI/UX + Role 3 GIS Fusion)
+ * Tactical Spatial Radar with Interactive MapLibre GL Vector Map & Schematic Toggle
  */
 const CenterRadar = ({
   selectedAtmId = 'ATM-091',
   onSelectAtm = () => {},
+  originLat = null,
+  originLon = null,
   atms = [
     {
       id: 'ATM-091',
@@ -69,31 +71,36 @@ const CenterRadar = ({
   const [viewMode, setViewMode] = useState('map'); // 'map' or 'schematic'
 
   return (
-    <div className="bg-white rounded-[4px] border border-slate-200 p-4 flex flex-col space-y-3">
+    <div className="bg-white rounded-sm border border-slate-200 p-4 flex flex-col space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-medium text-slate-900 text-xs">
-            Live Location Map — Delhi NCR
-          </h3>
-          <p className="text-xs text-slate-500 font-normal">
-            GPS: 28.6328° N, 77.2195° E • Central Division
+          <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Tactical Spatial Radar (Delhi NCR Sector)</h3>
+          {/* Was a fixed "28.6328° N, 77.2195° E" — not the mule's actual last
+              known position, so the caption disagreed with the origin marker
+              plotted on the map beside it. */}
+          <p className="text-xs text-slate-500">
+            {typeof originLat === 'number' && typeof originLon === 'number'
+              ? `Mule last seen: ${originLat.toFixed(4)}° N, ${originLon.toFixed(4)}° E`
+              : 'Mule last known position unavailable'}
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setViewMode(viewMode === 'map' ? 'schematic' : 'map')}
-            className="text-[11px] font-normal px-2.5 py-1 rounded-[3px] bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+            className="text-[11px] font-mono px-2 py-0.5 rounded-sm bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition-colors"
           >
-            {viewMode === 'map' ? 'Show Hex Grid View' : 'Show Map View'}
+            {viewMode === 'map' ? 'Switch to Schematic Grid' : 'Switch to Interactive Map'}
           </button>
-          <span className="text-[11px] font-mono font-medium px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-[3px]">
-            PCR 12 En Route
+          {/* Patrol dispatch is not integrated with any CAD/AVL system, so
+              "En Route" was a claim about the real world we cannot make. */}
+          <span className="text-xs font-mono font-medium px-2 py-0.5 bg-slate-50 text-slate-500 border border-slate-200 rounded-sm">
+            Patrol dispatch: not integrated
           </span>
         </div>
       </div>
 
       {/* Map Container */}
-      <div className="w-full min-h-[450px] flex-1 bg-slate-900 rounded-[4px] relative overflow-hidden border border-slate-800 select-none">
+      <div className="w-full min-h-[450px] flex-1 bg-slate-900 rounded-sm relative overflow-hidden border border-slate-800 select-none">
         {viewMode === 'map' ? (
           <div className="w-full h-[450px]">
             <MapRadar
@@ -117,16 +124,16 @@ const CenterRadar = ({
         ) : (
           <>
             <svg className="absolute inset-0 w-full h-full opacity-60">
-              <circle cx="50%" cy="50%" r="50" fill="none" stroke="#334155" strokeWidth="1.5" />
-              <circle cx="50%" cy="50%" r="110" fill="none" stroke="#334155" strokeWidth="1.5" strokeDasharray="6 6" />
-              <circle cx="50%" cy="50%" r="170" fill="none" stroke="#1e293b" strokeWidth="1.5" />
+              <circle cx="50%" cy="50%" r="50" fill="none" stroke="#334155" strokeWidth="2" />
+              <circle cx="50%" cy="50%" r="110" fill="none" stroke="#334155" strokeWidth="2" strokeDasharray="6 6" />
+              <circle cx="50%" cy="50%" r="170" fill="none" stroke="#1e293b" strokeWidth="2" />
 
-              <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#334155" strokeWidth="1" />
-              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#334155" strokeWidth="1" />
-              <line x1="20%" y1="20%" x2="80%" y2="80%" stroke="#1e293b" strokeWidth="1" />
-              <line x1="80%" y1="20%" x2="20%" y2="80%" stroke="#1e293b" strokeWidth="1" />
+              <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#334155" strokeWidth="1.5" />
+              <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#334155" strokeWidth="1.5" />
+              <line x1="20%" y1="20%" x2="80%" y2="80%" stroke="#1e293b" strokeWidth="1.5" />
+              <line x1="80%" y1="20%" x2="20%" y2="80%" stroke="#1e293b" strokeWidth="1.5" />
 
-              <line x1="30%" y1="36%" x2="50%" y2="46%" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="4 4" />
+              <line x1="30%" y1="36%" x2="50%" y2="46%" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4 4" />
             </svg>
 
             <span className="absolute text-[10px] text-slate-500 font-mono" style={{ left: '52%', top: '51%' }}>
@@ -144,15 +151,15 @@ const CenterRadar = ({
               className="absolute z-20 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
               style={{ left: '30%', top: '36%' }}
             >
-              <div className="w-5 h-5 rounded-[3px] bg-slate-700 text-white flex items-center justify-center font-mono font-medium text-[10px] border border-slate-500">
+              <div className="w-6 h-6 rounded-sm bg-slate-700 text-white flex items-center justify-center font-bold text-[10px] border border-slate-500">
                 P12
               </div>
-              <span className="text-[10px] font-mono text-slate-200 bg-slate-800 px-1.5 py-0.5 rounded-[3px] border border-slate-700 mt-1">
+              <span className="text-[10px] font-mono text-slate-200 bg-slate-800 px-1.5 py-0.5 rounded-sm border border-slate-700 mt-1">
                 PCR-12 (1.4 km)
               </span>
             </div>
 
-            {/* Flat Hard-Edged ATM Markers */}
+            {/* Clean ATM Markers */}
             {atms.map((atm) => {
               const isSelected = selectedAtmId === atm.id;
               return (
@@ -163,16 +170,14 @@ const CenterRadar = ({
                   style={{ left: `${atm.xPercent}%`, top: `${atm.yPercent}%` }}
                 >
                   <div className="flex flex-col items-center">
-                    <div className={`w-5 h-5 rounded-[3px] flex items-center justify-center font-mono font-medium text-[10px] ${
+                    <div className={`w-5 h-5 rounded-sm flex items-center justify-center font-bold text-[10px] ${
                       atm.rank === 1
-                        ? 'bg-rose-700 text-white border border-rose-900'
-                        : atm.rank <= 3
-                        ? 'bg-amber-600 text-white border border-amber-800'
-                        : 'bg-slate-800 text-slate-300 border border-slate-700'
+                        ? 'bg-rose-700 text-white border border-rose-500'
+                        : 'bg-slate-800 text-slate-300 border border-slate-600'
                     } ${isSelected ? 'ring-2 ring-slate-400' : ''}`}>
-                      #{atm.rank}
+                      {atm.rank}
                     </div>
-                    <span className="bg-slate-800 text-slate-300 text-[10px] font-mono px-1 py-0.5 rounded-[3px] border border-slate-700 mt-1 whitespace-nowrap">
+                    <span className="bg-slate-800 text-slate-300 text-[10px] font-mono px-1 py-0.5 rounded-sm border border-slate-700 mt-1 whitespace-nowrap">
                       {atm.name}
                     </span>
                   </div>
