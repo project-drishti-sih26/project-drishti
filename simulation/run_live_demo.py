@@ -1,10 +1,14 @@
 import requests
 import time
 import json
+import sys
 from datetime import datetime, timezone
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # The endpoint your backend teammate (Role 1) set up
-API_ENDPOINT = "http://localhost:8000/api/v1/transactions"
+API_ENDPOINT = "http://localhost:8000/api/v1/transactions/"
 
 def trigger_presentation_demo():
     print("🎬 INITIATING PROJECT DRISHTI LIVE DEMO...")

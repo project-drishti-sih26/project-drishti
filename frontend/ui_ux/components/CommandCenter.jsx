@@ -5,6 +5,7 @@ import SidebarLeft from './SidebarLeft';
 import CenterRadar from './CenterRadar';
 import SidebarRight from './SidebarRight';
 import PoliceDispatchModal from './PoliceDispatchModal';
+import GisDashboard from '../../gis/components/GisDashboard.jsx';
 
 /**
  * CommandCenter Component (Role 4 - UI/UX)
@@ -353,6 +354,130 @@ const CommandCenter = () => {
               </div>
             </div>
           </>
+        )}
+
+        {currentView === 'spatial_radar' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-white px-4 py-3 rounded-sm border border-slate-200">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Tactical Spatial GIS Command Center</h2>
+                <p className="text-xs text-slate-500">Live Spatio-Temporal Prediction Radar & Uber H3 Hexagonal Danger Heatmap</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-sm">
+                  Sector DL-CP (Connaught Place & Delhi NCR)
+                </span>
+                <button
+                  onClick={() => setCurrentView('overview')}
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-sm border border-slate-300 transition-colors"
+                >
+                  ← Back to Overview
+                </button>
+              </div>
+            </div>
+            <GisDashboard />
+          </div>
+        )}
+
+        {currentView === 'live_operations' && (
+          <div className="space-y-5">
+            <Alerts
+              alert={{
+                amount: activeCase.compromised_amount,
+                mule_account: activeCase.mule_account,
+                countdown: formatCountdown(secondsRemaining)
+              }}
+              onOpenCase={() => setIsDispatchModalOpen(true)}
+            />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 space-y-5">
+                <SidebarLeft caseData={activeCase} />
+                <CenterRadar
+                  selectedAtmId={selectedAtmId}
+                  onSelectAtm={handleSelectAtm}
+                  atms={atms}
+                />
+              </div>
+              <div className="lg:col-span-4">
+                <SidebarRight
+                  countdown={formatCountdown(secondsRemaining)}
+                  selectedAtmId={selectedAtmId}
+                  onSelectAtm={handleSelectAtm}
+                  predictedAtms={atms}
+                  onFeedback={handleFeedback}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentView === 'analytics' && (
+          <div className="space-y-5">
+            <div className="bg-white p-4 rounded-sm border border-slate-200 flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Investigation Logs & Pattern Analytics</h2>
+                <p className="text-xs text-slate-500">Temporal incident velocity, syndicate withdrawal trends, and ATM cashout vectors</p>
+              </div>
+              <span className="text-xs font-mono text-slate-500">Total Logged Today: 24 Cases</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-8 bg-white rounded-sm border border-slate-200 p-4 space-y-3">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Hourly Incident Volume (Delhi NCR)</h3>
+                <div className="h-48 flex items-end justify-between gap-2 pt-4 px-2 border-b border-slate-100">
+                  {[
+                    { time: '00:00', count: 1 },
+                    { time: '02:00', count: 0 },
+                    { time: '04:00', count: 0 },
+                    { time: '06:00', count: 1 },
+                    { time: '08:00', count: 2 },
+                    { time: '10:00', count: 4 },
+                    { time: '12:00', count: 3 },
+                    { time: '14:00', count: 5 },
+                    { time: '16:00', count: 4 },
+                    { time: '18:00', count: 6 },
+                    { time: '20:00', count: 8 },
+                    { time: '22:00', count: 9 },
+                  ].map((item, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group">
+                      <span className="text-[10px] font-mono text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {item.count}
+                      </span>
+                      <div
+                        className={`w-full rounded-none transition-all ${
+                          item.count >= 8 ? 'bg-rose-700' : item.count >= 4 ? 'bg-slate-700' : 'bg-slate-300'
+                        }`}
+                        style={{ height: `${Math.max(item.count * 10, 6)}%` }}
+                      />
+                      <span className="text-[10px] font-mono text-slate-500 mt-1">{item.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 bg-white rounded-sm border border-slate-200 p-4 space-y-3">
+                <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Modus Operandi Distribution</h3>
+                <div className="space-y-3 pt-2">
+                  {[
+                    { label: 'Screen Share APK Fraud', pct: 38, count: '9 cases', color: 'bg-rose-700' },
+                    { label: 'Impersonation Vishing Call', pct: 26, count: '6 cases', color: 'bg-slate-700' },
+                    { label: 'KYC Phishing SMS / Link', pct: 21, count: '5 cases', color: 'bg-amber-600' },
+                    { label: 'Card Cloning / Skimming', pct: 15, count: '4 cases', color: 'bg-slate-400' }
+                  ].map((type, i) => (
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between text-xs font-medium">
+                        <span className="text-slate-700">{type.label}</span>
+                        <span className="text-slate-500 font-mono">{type.pct}% ({type.count})</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-100 rounded-none overflow-hidden">
+                        <div className={`h-full ${type.color}`} style={{ width: `${type.pct}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
 

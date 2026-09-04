@@ -78,6 +78,9 @@ class TransactionCreate(BaseModel):
     receiver_id: str
     amount: float
     timestamp: Optional[datetime] = None
+    account_type: Optional[str] = None
+    last_known_lat: Optional[float] = None
+    last_known_lon: Optional[float] = None
 
 class TransactionResponse(BaseModel):
     status: str

@@ -1,4 +1,181 @@
-atm_id,latitude,longitude
-ATM-001,28.6139,77.209
-ATM-002,19.076,72.8777
-ATM-003,12.9716,77.5946
+location_id,bank_name,location_type,latitude,longitude,address,h3_index,historical_fraud_count,is_active
+ATM_HDFC_001,HDFC Bank,ATM,28.636814,77.210577,"HDFC ATM, Near Connaught Place, Central Delhi, Delhi NCR",891f194c2ffff,0,True
+ATM_HDFC_002,HDFC Bank,Banking_Correspondent,28.629782,77.205415,"HDFC Banking_Correspondent, Near Connaught Place, Central Delhi, Delhi NCR",891f1945dffff,2,True
+ATM_PNB_003,Punjab National Bank,Banking_Correspondent,28.629729,77.215481,"PNB Banking_Correspondent, Near Connaught Place, Central Delhi, Delhi NCR",891f19457ffff,0,True
+ATM_ICICI_004,ICICI Bank,Branch,28.627986,77.208432,"ICICI Branch, Near Connaught Place, Central Delhi, Delhi NCR",891f19430ffff,8,True
+ATM_KOTAK_005,Kotak Mahindra Bank,ATM,28.628398,77.212955,"KOTAK ATM, Near Connaught Place, Central Delhi, Delhi NCR",891f19444ffff,0,True
+ATM_HDFC_006,HDFC Bank,Branch,28.622234,77.211736,"HDFC Branch, Near Connaught Place, Central Delhi, Delhi NCR",891f194e3ffff,1,True
+ATM_HDFC_007,HDFC Bank,ATM,28.635048,77.223254,"HDFC ATM, Near Connaught Place, Central Delhi, Delhi NCR",891f194bfffff,7,True
+ATM_KOTAK_008,Kotak Mahindra Bank,ATM,28.630475,77.224719,"KOTAK ATM, Near Connaught Place, Central Delhi, Delhi NCR",891f19460ffff,1,True
+ATM_AXIS_009,Axis Bank,ATM,28.633901,77.208807,"AXIS ATM, Near Connaught Place, Central Delhi, Delhi NCR",891f19490ffff,0,True
+ATM_AXIS_010,Axis Bank,Banking_Correspondent,28.645832,77.185783,"AXIS Banking_Correspondent, Near Karol Bagh, Central Delhi, Delhi NCR",891f19459ffff,3,True
+ATM_SBI_011,State Bank of India,ATM,28.649826,77.179589,"SBI ATM, Near Karol Bagh, Central Delhi, Delhi NCR",891f19493ffff,5,True
+ATM_BOB_012,Bank of Baroda,ATM,28.65542,77.187495,"BOB ATM, Near Karol Bagh, Central Delhi, Delhi NCR",891f194fbffff,4,True
+ATM_ICICI_013,ICICI Bank,ATM,28.65739,77.190935,"ICICI ATM, Near Karol Bagh, Central Delhi, Delhi NCR",891f1941effff,1,True
+ATM_KOTAK_014,Kotak Mahindra Bank,ATM,28.645825,77.201941,"KOTAK ATM, Near Karol Bagh, Central Delhi, Delhi NCR",891f19459ffff,0,True
+ATM_HDFC_015,HDFC Bank,ATM,28.654804,77.19701,"HDFC ATM, Near Karol Bagh, Central Delhi, Delhi NCR",891f194e5ffff,0,True
+ATM_UBI_016,Union Bank of India,Banking_Correspondent,28.646531,77.191277,"UBI Banking_Correspondent, Near Karol Bagh, Central Delhi, Delhi NCR",891f1946fffff,6,True
+ATM_AXIS_017,Axis Bank,ATM,28.643454,77.188434,"AXIS ATM, Near Karol Bagh, Central Delhi, Delhi NCR",891f1943cffff,1,True
+ATM_ICICI_018,ICICI Bank,Banking_Correspondent,28.661078,77.198892,"ICICI Banking_Correspondent, Near Karol Bagh, Central Delhi, Delhi NCR",891f19456ffff,2,True
+ATM_ICICI_019,ICICI Bank,ATM,28.661975,77.230945,"ICICI ATM, Near Chandni Chowk, North Delhi, Delhi NCR",891f19456ffff,5,True
+ATM_BOB_020,Bank of Baroda,Branch,28.645628,77.240298,"BOB Branch, Near Chandni Chowk, North Delhi, Delhi NCR",891f19450ffff,4,True
+ATM_PNB_021,Punjab National Bank,Banking_Correspondent,28.666033,77.220056,"PNB Banking_Correspondent, Near Chandni Chowk, North Delhi, Delhi NCR",891f194acffff,0,True
+ATM_ICICI_022,ICICI Bank,ATM,28.659715,77.240724,"ICICI ATM, Near Chandni Chowk, North Delhi, Delhi NCR",891f19430ffff,2,True
+ATM_KOTAK_023,Kotak Mahindra Bank,ATM,28.665636,77.236126,"KOTAK ATM, Near Chandni Chowk, North Delhi, Delhi NCR",891f1949cffff,1,True
+ATM_BOB_024,Bank of Baroda,Branch,28.664992,77.228836,"BOB Branch, Near Chandni Chowk, North Delhi, Delhi NCR",891f19484ffff,0,True
+ATM_PNB_025,Punjab National Bank,Banking_Correspondent,28.650045,77.219704,"PNB Banking_Correspondent, Near Chandni Chowk, North Delhi, Delhi NCR",891f194abffff,0,True
+ATM_SBI_026,State Bank of India,ATM,28.646759,77.223712,"SBI ATM, Near Chandni Chowk, North Delhi, Delhi NCR",891f1946fffff,0,True
+ATM_UBI_027,Union Bank of India,ATM,28.662462,77.23738,"UBI ATM, Near Chandni Chowk, North Delhi, Delhi NCR",891f1946dffff,0,True
+ATM_BOB_028,Bank of Baroda,Branch,28.678044,77.233732,"BOB Branch, Near Civil Lines, North Delhi, Delhi NCR",891f19469ffff,0,True
+ATM_BOB_029,Bank of Baroda,ATM,28.67447,77.217565,"BOB ATM, Near Civil Lines, North Delhi, Delhi NCR",891f19429ffff,1,True
+ATM_UBI_030,Union Bank of India,ATM,28.688239,77.214809,"UBI ATM, Near Civil Lines, North Delhi, Delhi NCR",891f19406ffff,5,True
+ATM_SBI_031,State Bank of India,ATM,28.68938,77.233369,"SBI ATM, Near Civil Lines, North Delhi, Delhi NCR",891f19419ffff,1,True
+ATM_KOTAK_032,Kotak Mahindra Bank,ATM,28.672622,77.213052,"KOTAK ATM, Near Civil Lines, North Delhi, Delhi NCR",891f19405ffff,1,True
+ATM_UBI_033,Union Bank of India,ATM,28.673178,77.218225,"UBI ATM, Near Civil Lines, North Delhi, Delhi NCR",891f1941affff,2,True
+ATM_BOB_034,Bank of Baroda,ATM,28.670103,77.224443,"BOB ATM, Near Civil Lines, North Delhi, Delhi NCR",891f194e0ffff,5,True
+ATM_HDFC_035,HDFC Bank,ATM,28.670507,77.214631,"HDFC ATM, Near Civil Lines, North Delhi, Delhi NCR",891f194e6ffff,4,True
+ATM_PNB_036,Punjab National Bank,Banking_Correspondent,28.682079,77.227865,"PNB Banking_Correspondent, Near Civil Lines, North Delhi, Delhi NCR",891f194a3ffff,2,True
+ATM_BOB_037,Bank of Baroda,ATM,28.708494,77.196189,"BOB ATM, Near Model Town, North Delhi, Delhi NCR",891f19444ffff,1,True
+ATM_AXIS_038,Axis Bank,Branch,28.710956,77.197045,"AXIS Branch, Near Model Town, North Delhi, Delhi NCR",891f19465ffff,1,True
+ATM_HDFC_039,HDFC Bank,ATM,28.715828,77.191141,"HDFC ATM, Near Model Town, North Delhi, Delhi NCR",891f194bfffff,1,True
+ATM_PNB_040,Punjab National Bank,ATM,28.71027,77.189516,"PNB ATM, Near Model Town, North Delhi, Delhi NCR",891f1946dffff,1,True
+ATM_SBI_041,State Bank of India,Banking_Correspondent,28.710586,77.194921,"SBI Banking_Correspondent, Near Model Town, North Delhi, Delhi NCR",891f19462ffff,7,True
+ATM_HDFC_042,HDFC Bank,Banking_Correspondent,28.70742,77.185762,"HDFC Banking_Correspondent, Near Model Town, North Delhi, Delhi NCR",891f19439ffff,1,True
+ATM_AXIS_043,Axis Bank,Banking_Correspondent,28.714748,77.200728,"AXIS Banking_Correspondent, Near Model Town, North Delhi, Delhi NCR",891f194a8ffff,3,True
+ATM_AXIS_044,Axis Bank,ATM,28.704078,77.197507,"AXIS ATM, Near Model Town, North Delhi, Delhi NCR",891f19405ffff,1,True
+ATM_UBI_045,Union Bank of India,Banking_Correspondent,28.719525,77.192462,"UBI Banking_Correspondent, Near Model Town, North Delhi, Delhi NCR",891f194f0ffff,0,True
+ATM_BOB_046,Bank of Baroda,Banking_Correspondent,28.571156,77.238315,"BOB Banking_Correspondent, Near Lajpat Nagar, South Delhi, Delhi NCR",891f194beffff,1,True
+ATM_SBI_047,State Bank of India,ATM,28.563622,77.233989,"SBI ATM, Near Lajpat Nagar, South Delhi, Delhi NCR",891f19439ffff,2,True
+ATM_KOTAK_048,Kotak Mahindra Bank,Banking_Correspondent,28.575489,77.250218,"KOTAK Banking_Correspondent, Near Lajpat Nagar, South Delhi, Delhi NCR",891f194faffff,0,True
+ATM_ICICI_049,ICICI Bank,Branch,28.559545,77.245678,"ICICI Branch, Near Lajpat Nagar, South Delhi, Delhi NCR",891f194f5ffff,1,True
+ATM_PNB_050,Punjab National Bank,ATM,28.562502,77.244831,"PNB ATM, Near Lajpat Nagar, South Delhi, Delhi NCR",891f19424ffff,0,True
+ATM_PNB_051,Punjab National Bank,ATM,28.576965,77.239047,"PNB ATM, Near Lajpat Nagar, South Delhi, Delhi NCR",891f1940fffff,0,True
+ATM_PNB_052,Punjab National Bank,Branch,28.566222,77.248744,"PNB Branch, Near Lajpat Nagar, South Delhi, Delhi NCR",891f19468ffff,8,True
+ATM_KOTAK_053,Kotak Mahindra Bank,Banking_Correspondent,28.566285,77.228662,"KOTAK Banking_Correspondent, Near Lajpat Nagar, South Delhi, Delhi NCR",891f19464ffff,4,True
+ATM_AXIS_054,Axis Bank,ATM,28.561385,77.23843,"AXIS ATM, Near Lajpat Nagar, South Delhi, Delhi NCR",891f1941effff,1,True
+ATM_HDFC_055,HDFC Bank,Branch,28.576789,77.214562,"HDFC Branch, Near South Extension, South Delhi, Delhi NCR",891f19406ffff,1,False
+ATM_PNB_056,Punjab National Bank,ATM,28.566489,77.232773,"PNB ATM, Near South Extension, South Delhi, Delhi NCR",891f19468ffff,5,True
+ATM_HDFC_057,HDFC Bank,ATM,28.568157,77.226005,"HDFC ATM, Near South Extension, South Delhi, Delhi NCR",891f19482ffff,1,True
+ATM_PNB_058,Punjab National Bank,Branch,28.571628,77.219099,"PNB Branch, Near South Extension, South Delhi, Delhi NCR",891f194bbffff,0,True
+ATM_AXIS_059,Axis Bank,Branch,28.569055,77.21001,"AXIS Branch, Near South Extension, South Delhi, Delhi NCR",891f19492ffff,1,True
+ATM_BOB_060,Bank of Baroda,Branch,28.566719,77.226215,"BOB Branch, Near South Extension, South Delhi, Delhi NCR",891f19462ffff,0,True
+ATM_AXIS_061,Axis Bank,Banking_Correspondent,28.571605,77.224862,"AXIS Banking_Correspondent, Near South Extension, South Delhi, Delhi NCR",891f194b0ffff,0,True
+ATM_PNB_062,Punjab National Bank,ATM,28.560242,77.211109,"PNB ATM, Near South Extension, South Delhi, Delhi NCR",891f19403ffff,10,True
+ATM_HDFC_063,HDFC Bank,Branch,28.566118,77.225114,"HDFC Branch, Near South Extension, South Delhi, Delhi NCR",891f19461ffff,1,True
+ATM_PNB_064,Punjab National Bank,ATM,28.543433,77.228133,"PNB ATM, Near Greater Kailash, South Delhi, Delhi NCR",891f194f4ffff,3,True
+ATM_PNB_065,Punjab National Bank,ATM,28.54669,77.244702,"PNB ATM, Near Greater Kailash, South Delhi, Delhi NCR",891f19424ffff,2,True
+ATM_HDFC_066,HDFC Bank,Branch,28.531933,77.239151,"HDFC Branch, Near Greater Kailash, South Delhi, Delhi NCR",891f1943fffff,2,True
+ATM_UBI_067,Union Bank of India,Banking_Correspondent,28.54693,77.249408,"UBI Banking_Correspondent, Near Greater Kailash, South Delhi, Delhi NCR",891f19429ffff,2,True
+ATM_ICICI_068,ICICI Bank,Branch,28.538902,77.246043,"ICICI Branch, Near Greater Kailash, South Delhi, Delhi NCR",891f194a6ffff,4,True
+ATM_UBI_069,Union Bank of India,ATM,28.535041,77.22986,"UBI ATM, Near Greater Kailash, South Delhi, Delhi NCR",891f19475ffff,1,True
+ATM_HDFC_070,HDFC Bank,ATM,28.532318,77.237193,"HDFC ATM, Near Greater Kailash, South Delhi, Delhi NCR",891f1944dffff,0,True
+ATM_KOTAK_071,Kotak Mahindra Bank,ATM,28.540937,77.237979,"KOTAK ATM, Near Greater Kailash, South Delhi, Delhi NCR",891f194cdffff,1,True
+ATM_SBI_072,State Bank of India,Banking_Correspondent,28.537368,77.228142,"SBI Banking_Correspondent, Near Greater Kailash, South Delhi, Delhi NCR",891f19494ffff,1,True
+ATM_KOTAK_073,Kotak Mahindra Bank,Banking_Correspondent,28.554845,77.201207,"KOTAK Banking_Correspondent, Near Hauz Khas, South Delhi, Delhi NCR",891f194a9ffff,0,True
+ATM_AXIS_074,Axis Bank,Branch,28.549084,77.197433,"AXIS Branch, Near Hauz Khas, South Delhi, Delhi NCR",891f19455ffff,1,True
+ATM_UBI_075,Union Bank of India,ATM,28.559976,77.200919,"UBI ATM, Near Hauz Khas, South Delhi, Delhi NCR",891f194f8ffff,5,True
+ATM_SBI_076,State Bank of India,ATM,28.55254,77.191357,"SBI ATM, Near Hauz Khas, South Delhi, Delhi NCR",891f1948fffff,0,True
+ATM_BOB_077,Bank of Baroda,ATM,28.548403,77.1962,"BOB ATM, Near Hauz Khas, South Delhi, Delhi NCR",891f19444ffff,4,True
+ATM_KOTAK_078,Kotak Mahindra Bank,ATM,28.556768,77.199387,"KOTAK ATM, Near Hauz Khas, South Delhi, Delhi NCR",891f194c7ffff,0,True
+ATM_BOB_079,Bank of Baroda,ATM,28.552703,77.20685,"BOB ATM, Near Hauz Khas, South Delhi, Delhi NCR",891f1948effff,0,True
+ATM_PNB_080,Punjab National Bank,ATM,28.552069,77.193825,"PNB ATM, Near Hauz Khas, South Delhi, Delhi NCR",891f19481ffff,0,True
+ATM_PNB_081,Punjab National Bank,Branch,28.553788,77.206506,"PNB Branch, Near Hauz Khas, South Delhi, Delhi NCR",891f1949effff,2,True
+ATM_HDFC_082,HDFC Bank,ATM,28.534624,77.197194,"HDFC ATM, Near Saket District Centre, South Delhi, Delhi NCR",891f19465ffff,1,True
+ATM_KOTAK_083,Kotak Mahindra Bank,Branch,28.534112,77.19936,"KOTAK Branch, Near Saket District Centre, South Delhi, Delhi NCR",891f19467ffff,0,True
+ATM_AXIS_084,Axis Bank,Banking_Correspondent,28.531122,77.213709,"AXIS Banking_Correspondent, Near Saket District Centre, South Delhi, Delhi NCR",891f19435ffff,0,True
+ATM_KOTAK_085,Kotak Mahindra Bank,ATM,28.514917,77.210141,"KOTAK ATM, Near Saket District Centre, South Delhi, Delhi NCR",891f19422ffff,1,True
+ATM_HDFC_086,HDFC Bank,Branch,28.534537,77.209854,"HDFC Branch, Near Saket District Centre, South Delhi, Delhi NCR",891f19461ffff,5,True
+ATM_ICICI_087,ICICI Bank,Banking_Correspondent,28.53464,77.201082,"ICICI Banking_Correspondent, Near Saket District Centre, South Delhi, Delhi NCR",891f19469ffff,5,True
+ATM_UBI_088,Union Bank of India,Branch,28.531566,77.208819,"UBI Branch, Near Saket District Centre, South Delhi, Delhi NCR",891f19430ffff,0,True
+ATM_HDFC_089,HDFC Bank,ATM,28.532796,77.200453,"HDFC ATM, Near Saket District Centre, South Delhi, Delhi NCR",891f19448ffff,2,True
+ATM_BOB_090,Bank of Baroda,ATM,28.524275,77.2024,"BOB ATM, Near Saket District Centre, South Delhi, Delhi NCR",891f194caffff,1,True
+ATM_BOB_091,Bank of Baroda,ATM,28.528367,77.154828,"BOB ATM, Near Vasant Kunj, South Delhi, Delhi NCR",891f1940affff,0,True
+ATM_PNB_092,Punjab National Bank,ATM,28.51431,77.147754,"PNB ATM, Near Vasant Kunj, South Delhi, Delhi NCR",891f19423ffff,0,True
+ATM_UBI_093,Union Bank of India,Branch,28.526445,77.140233,"UBI Branch, Near Vasant Kunj, South Delhi, Delhi NCR",891f194ecffff,0,True
+ATM_BOB_094,Bank of Baroda,Branch,28.521176,77.14625,"BOB Branch, Near Vasant Kunj, South Delhi, Delhi NCR",891f19492ffff,10,True
+ATM_UBI_095,Union Bank of India,ATM,28.515746,77.143533,"UBI ATM, Near Vasant Kunj, South Delhi, Delhi NCR",891f1943fffff,1,True
+ATM_ICICI_096,ICICI Bank,ATM,28.51376,77.149621,"ICICI ATM, Near Vasant Kunj, South Delhi, Delhi NCR",891f19415ffff,2,True
+ATM_HDFC_097,HDFC Bank,ATM,28.515517,77.146661,"HDFC ATM, Near Vasant Kunj, South Delhi, Delhi NCR",891f19432ffff,2,True
+ATM_SBI_098,State Bank of India,ATM,28.521174,77.154738,"SBI ATM, Near Vasant Kunj, South Delhi, Delhi NCR",891f1949affff,1,True
+ATM_SBI_099,State Bank of India,Banking_Correspondent,28.515255,77.149489,"SBI Banking_Correspondent, Near Vasant Kunj, South Delhi, Delhi NCR",891f19435ffff,0,True
+ATM_UBI_100,Union Bank of India,ATM,28.599187,77.043617,"UBI ATM, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f1947bffff,0,True
+ATM_AXIS_101,Axis Bank,ATM,28.602966,77.036843,"AXIS ATM, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f194a4ffff,5,True
+ATM_PNB_102,Punjab National Bank,Banking_Correspondent,28.589468,77.055804,"PNB Banking_Correspondent, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f194d7ffff,2,True
+ATM_AXIS_103,Axis Bank,Banking_Correspondent,28.594763,77.048631,"AXIS Banking_Correspondent, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f19420ffff,0,True
+ATM_AXIS_104,Axis Bank,ATM,28.584555,77.038172,"AXIS ATM, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f19486ffff,0,True
+ATM_UBI_105,Union Bank of India,ATM,28.581818,77.040915,"UBI ATM, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f19458ffff,1,True
+ATM_PNB_106,Punjab National Bank,ATM,28.598432,77.049001,"PNB ATM, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f19461ffff,0,True
+ATM_PNB_107,Punjab National Bank,ATM,28.601085,77.053839,"PNB ATM, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f19495ffff,0,True
+ATM_AXIS_108,Axis Bank,Branch,28.583836,77.050528,"AXIS Branch, Near Dwarka Sector 10, West Delhi, Delhi NCR",891f19472ffff,1,True
+ATM_UBI_109,Union Bank of India,Branch,28.61877,77.068957,"UBI Branch, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f194a4ffff,1,True
+ATM_SBI_110,State Bank of India,ATM,28.622036,77.084183,"SBI ATM, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f194e4ffff,5,True
+ATM_AXIS_111,Axis Bank,Banking_Correspondent,28.617885,77.08615,"AXIS Banking_Correspondent, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f19496ffff,1,True
+ATM_ICICI_112,ICICI Bank,Banking_Correspondent,28.626589,77.087542,"ICICI Banking_Correspondent, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f19427ffff,9,True
+ATM_BOB_113,Bank of Baroda,ATM,28.631743,77.088586,"BOB ATM, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f19478ffff,1,True
+ATM_KOTAK_114,Kotak Mahindra Bank,Banking_Correspondent,28.617807,77.070113,"KOTAK Banking_Correspondent, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f19496ffff,0,True
+ATM_KOTAK_115,Kotak Mahindra Bank,Banking_Correspondent,28.635148,77.068028,"KOTAK Banking_Correspondent, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f194b4ffff,4,True
+ATM_PNB_116,Punjab National Bank,Banking_Correspondent,28.624959,77.086155,"PNB Banking_Correspondent, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f19406ffff,0,True
+ATM_ICICI_117,ICICI Bank,ATM,28.626639,77.084758,"ICICI ATM, Near Janakpuri District Centre, West Delhi, Delhi NCR",891f19424ffff,2,True
+ATM_ICICI_118,ICICI Bank,ATM,28.650318,77.122254,"ICICI ATM, Near Rajouri Garden, West Delhi, Delhi NCR",891f194aaffff,0,True
+ATM_HDFC_119,HDFC Bank,ATM,28.649164,77.126198,"HDFC ATM, Near Rajouri Garden, West Delhi, Delhi NCR",891f1949effff,1,True
+ATM_UBI_120,Union Bank of India,Branch,28.643562,77.12223,"UBI Branch, Near Rajouri Garden, West Delhi, Delhi NCR",891f1943affff,2,True
+ATM_ICICI_121,ICICI Bank,ATM,28.644277,77.12796,"ICICI ATM, Near Rajouri Garden, West Delhi, Delhi NCR",891f1944fffff,2,True
+ATM_SBI_122,State Bank of India,ATM,28.654173,77.129099,"SBI ATM, Near Rajouri Garden, West Delhi, Delhi NCR",891f194e1ffff,1,True
+ATM_UBI_123,Union Bank of India,Banking_Correspondent,28.648856,77.116979,"UBI Banking_Correspondent, Near Rajouri Garden, West Delhi, Delhi NCR",891f19484ffff,4,True
+ATM_BOB_124,Bank of Baroda,ATM,28.659777,77.114731,"BOB ATM, Near Rajouri Garden, West Delhi, Delhi NCR",891f19432ffff,1,True
+ATM_UBI_125,Union Bank of India,Branch,28.646694,77.124929,"UBI Branch, Near Rajouri Garden, West Delhi, Delhi NCR",891f1946cffff,3,True
+ATM_SBI_126,State Bank of India,ATM,28.64925,77.123164,"SBI ATM, Near Rajouri Garden, West Delhi, Delhi NCR",891f1949bffff,4,True
+ATM_UBI_127,Union Bank of India,ATM,28.702894,77.111839,"UBI ATM, Near Pitampura, North West Delhi, Delhi NCR",891f194efffff,0,True
+ATM_AXIS_128,Axis Bank,ATM,28.700712,77.11154,"AXIS ATM, Near Pitampura, North West Delhi, Delhi NCR",891f194cfffff,1,True
+ATM_KOTAK_129,Kotak Mahindra Bank,ATM,28.70079,77.123299,"KOTAK ATM, Near Pitampura, North West Delhi, Delhi NCR",891f194cbffff,2,False
+ATM_HDFC_130,HDFC Bank,ATM,28.700886,77.124102,"HDFC ATM, Near Pitampura, North West Delhi, Delhi NCR",891f194ccffff,6,True
+ATM_HDFC_131,HDFC Bank,ATM,28.696761,77.118656,"HDFC ATM, Near Pitampura, North West Delhi, Delhi NCR",891f19486ffff,3,True
+ATM_SBI_132,State Bank of India,ATM,28.694886,77.112336,"SBI ATM, Near Pitampura, North West Delhi, Delhi NCR",891f19460ffff,1,True
+ATM_ICICI_133,ICICI Bank,ATM,28.690852,77.116628,"ICICI ATM, Near Pitampura, North West Delhi, Delhi NCR",891f19424ffff,0,True
+ATM_ICICI_134,ICICI Bank,ATM,28.697145,77.108095,"ICICI ATM, Near Pitampura, North West Delhi, Delhi NCR",891f1949cffff,0,True
+ATM_UBI_135,Union Bank of India,ATM,28.701907,77.105791,"UBI ATM, Near Pitampura, North West Delhi, Delhi NCR",891f194d9ffff,1,True
+ATM_AXIS_136,Axis Bank,Branch,28.714187,77.118964,"AXIS Branch, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f194a6ffff,1,True
+ATM_HDFC_137,HDFC Bank,ATM,28.70739,77.116615,"HDFC ATM, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f19434ffff,1,False
+ATM_KOTAK_138,Kotak Mahindra Bank,ATM,28.699178,77.128762,"KOTAK ATM, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f194b0ffff,3,True
+ATM_UBI_139,Union Bank of India,ATM,28.716066,77.113523,"UBI ATM, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f194c1ffff,3,True
+ATM_AXIS_140,Axis Bank,ATM,28.712821,77.129682,"AXIS ATM, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f19481ffff,1,True
+ATM_SBI_141,State Bank of India,Banking_Correspondent,28.707027,77.111154,"SBI Banking_Correspondent, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f1943fffff,4,True
+ATM_ICICI_142,ICICI Bank,ATM,28.701908,77.120946,"ICICI ATM, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f194d8ffff,10,True
+ATM_AXIS_143,Axis Bank,ATM,28.704653,77.127793,"AXIS ATM, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f1940fffff,1,True
+ATM_BOB_144,Bank of Baroda,ATM,28.709303,77.109807,"BOB ATM, Near Rohini Sector 7, North West Delhi, Delhi NCR",891f1945dffff,3,True
+ATM_KOTAK_145,Kotak Mahindra Bank,Banking_Correspondent,28.617047,77.301976,"KOTAK Banking_Correspondent, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f1949dffff,2,True
+ATM_BOB_146,Bank of Baroda,ATM,28.62186,77.302738,"BOB ATM, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f194deffff,6,True
+ATM_UBI_147,Union Bank of India,ATM,28.62263,77.305636,"UBI ATM, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f194e1ffff,2,True
+ATM_HDFC_148,HDFC Bank,Branch,28.629007,77.290253,"HDFC Branch, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f19452ffff,0,True
+ATM_SBI_149,State Bank of India,ATM,28.63091,77.285787,"SBI ATM, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f1946dffff,2,True
+ATM_UBI_150,Union Bank of India,ATM,28.623751,77.300835,"UBI ATM, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f194fcffff,9,True
+ATM_ICICI_151,ICICI Bank,Branch,28.623408,77.303009,"ICICI Branch, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f194ffffff,1,False
+ATM_BOB_152,Bank of Baroda,ATM,28.618754,77.305813,"BOB ATM, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f194a1ffff,3,True
+ATM_BOB_153,Bank of Baroda,Banking_Correspondent,28.628837,77.298476,"BOB Banking_Correspondent, Near Mayur Vihar Phase 1, East Delhi, Delhi NCR",891f1944affff,1,True
+ATM_HDFC_154,HDFC Bank,Branch,28.621017,77.270091,"HDFC Branch, Near Laxmi Nagar, East Delhi, Delhi NCR",891f194deffff,0,True
+ATM_BOB_155,Bank of Baroda,ATM,28.640754,77.283887,"BOB ATM, Near Laxmi Nagar, East Delhi, Delhi NCR",891f1940bffff,2,True
+ATM_PNB_156,Punjab National Bank,ATM,28.626228,77.268541,"PNB ATM, Near Laxmi Nagar, East Delhi, Delhi NCR",891f1942cffff,3,True
+ATM_ICICI_157,ICICI Bank,ATM,28.630885,77.284164,"ICICI ATM, Near Laxmi Nagar, East Delhi, Delhi NCR",891f1946cffff,0,True
+ATM_BOB_158,Bank of Baroda,ATM,28.631955,77.265379,"BOB ATM, Near Laxmi Nagar, East Delhi, Delhi NCR",891f19479ffff,0,True
+ATM_HDFC_159,HDFC Bank,ATM,28.629477,77.283672,"HDFC ATM, Near Laxmi Nagar, East Delhi, Delhi NCR",891f1945bffff,0,True
+ATM_PNB_160,Punjab National Bank,Banking_Correspondent,28.619954,77.283797,"PNB Banking_Correspondent, Near Laxmi Nagar, East Delhi, Delhi NCR",891f194bbffff,5,True
+ATM_SBI_161,State Bank of India,ATM,28.640969,77.285335,"SBI ATM, Near Laxmi Nagar, East Delhi, Delhi NCR",891f1940dffff,0,True
+ATM_UBI_162,Union Bank of India,ATM,28.638784,77.272731,"UBI ATM, Near Laxmi Nagar, East Delhi, Delhi NCR",891f194e0ffff,0,True
+ATM_BOB_163,Bank of Baroda,Branch,28.680882,77.290733,"BOB Branch, Near Shahdara, East Delhi, Delhi NCR",891f19482ffff,2,True
+ATM_HDFC_164,HDFC Bank,Banking_Correspondent,28.674858,77.283161,"HDFC Banking_Correspondent, Near Shahdara, East Delhi, Delhi NCR",891f1942bffff,0,True
+ATM_UBI_165,Union Bank of India,Branch,28.668152,77.280282,"UBI Branch, Near Shahdara, East Delhi, Delhi NCR",891f194c8ffff,1,True
+ATM_ICICI_166,ICICI Bank,Branch,28.660477,77.297963,"ICICI Branch, Near Shahdara, East Delhi, Delhi NCR",891f19449ffff,0,True
+ATM_BOB_167,Bank of Baroda,ATM,28.67124,77.292075,"BOB ATM, Near Shahdara, East Delhi, Delhi NCR",891f194f4ffff,1,True
+ATM_KOTAK_168,Kotak Mahindra Bank,ATM,28.678219,77.300587,"KOTAK ATM, Near Shahdara, East Delhi, Delhi NCR",891f1946cffff,0,True
+ATM_AXIS_169,Axis Bank,ATM,28.661279,77.290178,"AXIS ATM, Near Shahdara, East Delhi, Delhi NCR",891f19452ffff,1,True
+ATM_HDFC_170,HDFC Bank,ATM,28.677598,77.286821,"HDFC ATM, Near Shahdara, East Delhi, Delhi NCR",891f1945effff,5,True
+ATM_KOTAK_171,Kotak Mahindra Bank,Banking_Correspondent,28.68044,77.297642,"KOTAK Banking_Correspondent, Near Shahdara, East Delhi, Delhi NCR",891f19489ffff,2,False
+ATM_AXIS_172,Axis Bank,ATM,28.562969,77.324865,"AXIS ATM, Near Noida Sector 18, Noida NCR, Delhi NCR",891f19424ffff,1,True
+ATM_ICICI_173,ICICI Bank,ATM,28.571459,77.317619,"ICICI ATM, Near Noida Sector 18, Noida NCR, Delhi NCR",891f194bdffff,0,True
+ATM_PNB_174,Punjab National Bank,Branch,28.568236,77.316182,"PNB Branch, Near Noida Sector 18, Noida NCR, Delhi NCR",891f1948cffff,1,True
+ATM_HDFC_175,HDFC Bank,ATM,28.562423,77.326106,"HDFC ATM, Near Noida Sector 18, Noida NCR, Delhi NCR",891f19426ffff,0,True
+ATM_KOTAK_176,Kotak Mahindra Bank,Branch,28.572356,77.31794,"KOTAK Branch, Near Noida Sector 18, Noida NCR, Delhi NCR",891f194cdffff,2,True
+ATM_KOTAK_177,Kotak Mahindra Bank,ATM,28.565231,77.324284,"KOTAK ATM, Near Noida Sector 18, Noida NCR, Delhi NCR",891f19454ffff,1,True
+ATM_KOTAK_178,Kotak Mahindra Bank,Banking_Correspondent,28.560205,77.312906,"KOTAK Banking_Correspondent, Near Noida Sector 18, Noida NCR, Delhi NCR",891f19408ffff,7,True
+ATM_AXIS_179,Axis Bank,ATM,28.56164,77.319937,"AXIS ATM, Near Noida Sector 18, Noida NCR, Delhi NCR",891f1941fffff,0,True
+ATM_PNB_180,Punjab National Bank,Banking_Correspondent,28.571292,77.324033,"PNB Banking_Correspondent, Near Noida Sector 18, Noida NCR, Delhi NCR",891f194b4ffff,1,True

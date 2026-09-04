@@ -17,14 +17,18 @@ async def evaluate_transaction(tx: TransactionCreate, db: Session):
     account = db.query(Account).filter(Account.account_id == tx.receiver_id).first()
     
     is_mule_account = account is not None and account.account_type == AccountType.MULE
-    is_demo_mule = tx.receiver_id.startswith("MULE")
+    is_demo_mule = (
+        tx.receiver_id.startswith("MULE") or
+        "MULE" in tx.receiver_id.upper() or
+        (getattr(tx, "account_type", None) and str(tx.account_type).upper() == "MULE")
+    )
     meets_amount = tx.amount is not None and tx.amount >= 50000.0
 
     # Trigger ML if DB confirms Mule account or demo mule ID, and amount threshold is met
     if (is_mule_account and meets_amount) or (is_demo_mule and meets_amount):
         payload = None
-        mule_lat = account.last_known_latitude if account and account.last_known_latitude else None
-        mule_lon = account.last_known_longitude if account and account.last_known_longitude else None
+        mule_lat = getattr(tx, "last_known_lat", None) or (account.last_known_latitude if account and account.last_known_latitude else None)
+        mule_lon = getattr(tx, "last_known_lon", None) or (account.last_known_longitude if account and account.last_known_longitude else None)
 
         # Try real ML Engine inference pipeline first
         try:

@@ -15,6 +15,40 @@ import { mockLocations, mockActiveAlert } from '../mockData.js';
  * Uber H3 danger hexes, tactical pulsating markers, and flyTo camera zooms.
  * Completely free, keyless, and open-source.
  */
+const MAP_STYLES = {
+  streets: {
+    label: 'Street',
+    style: 'https://tiles.openfreemap.org/styles/liberty'
+  },
+  satellite: {
+    label: 'Satellite',
+    style: {
+      version: 8,
+      sources: {
+        'esri-satellite': {
+          type: 'raster',
+          tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+          tileSize: 256,
+          attribution: 'Esri World Imagery'
+        }
+      },
+      layers: [
+        {
+          id: 'esri-satellite-layer',
+          type: 'raster',
+          source: 'esri-satellite',
+          minzoom: 0,
+          maxzoom: 19
+        }
+      ]
+    }
+  },
+  dark: {
+    label: 'Dark',
+    style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+  }
+};
+
 const MapRadar = ({
   locations = mockLocations,
   riskCells = mockActiveAlert.risk_cells,
@@ -30,8 +64,16 @@ const MapRadar = ({
   const markersRef = useRef(new Map());
   const popupsRef = useRef(new Map());
 
+  const [currentStyleKey, setCurrentStyleKey] = useState('streets');
   const [activeSelectedId, setActiveSelectedId] = useState(selectedLocationId || (locations[0]?.id ?? null));
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  const handleStyleChange = (key) => {
+    if (!mapInstanceRef.current || key === currentStyleKey) return;
+    setCurrentStyleKey(key);
+    const selected = MAP_STYLES[key];
+    mapInstanceRef.current.setStyle(selected.style);
+  };
 
   // Handle target flyTo navigation
   const flyToTarget = useCallback((target) => {
@@ -220,7 +262,7 @@ const MapRadar = ({
     } else {
       map.once('style.load', renderHexes);
     }
-  }, [locations, riskCells, activeSelectedId, isMapLoaded, flyToTarget]);
+  }, [locations, riskCells, activeSelectedId, isMapLoaded, flyToTarget, currentStyleKey]);
 
   return (
     <div className="relative w-full h-full min-h-[600px] overflow-hidden rounded-2xl border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.15)] bg-slate-950 flex flex-col">
@@ -232,8 +274,29 @@ const MapRadar = ({
             GIS SPATIO-TEMPORAL RADAR
           </span>
           <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40 font-semibold">
-            OPENFREEMAP LIBERTY
+            {MAP_STYLES[currentStyleKey]?.label.toUpperCase()}
           </span>
+        </div>
+
+        {/* Real Interactive Basemap Switcher */}
+        <div className="flex items-center bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 rounded-lg p-0.5 shadow-lg gap-0.5">
+          {Object.entries(MAP_STYLES).map(([key, item]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => handleStyleChange(key)}
+              className={`px-2 py-1 text-[11px] font-mono font-medium rounded transition-all cursor-pointer ${
+                currentStyleKey === key
+                  ? 'bg-cyan-500 text-slate-950 font-bold shadow'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              {key === 'streets' && '🗺️ '}
+              {key === 'satellite' && '🛰️ '}
+              {key === 'dark' && '🌑 '}
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
 

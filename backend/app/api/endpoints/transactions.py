@@ -23,13 +23,17 @@ async def create_transaction(tx: TransactionCreate, db=Depends(get_db)):
             is_mule = is_recv and (
                 acc_id.startswith("MULE") or
                 acc_id.startswith("ACC_MULE") or
+                "MULE" in acc_id.upper() or
+                (getattr(tx, "account_type", None) and str(tx.account_type).upper() == "MULE") or
                 (tx.amount and tx.amount >= 50000.0)
             )
             db.add(Account(
                 account_id=acc_id,
                 account_type=AccountType.MULE if is_mule else AccountType.STANDARD,
                 bank_name="Detected Bank",
-                owner_name="Suspect Runner" if is_mule else "Account Holder"
+                owner_name="Suspect Runner" if is_mule else "Account Holder",
+                last_known_latitude=getattr(tx, "last_known_lat", None),
+                last_known_longitude=getattr(tx, "last_known_lon", None)
             ))
             db.commit()
 
@@ -37,7 +41,9 @@ async def create_transaction(tx: TransactionCreate, db=Depends(get_db)):
     existing_tx = db.query(Transaction).filter(Transaction.tx_id == tx.tx_id).first()
     if not existing_tx:
         data = tx.model_dump() if hasattr(tx, "model_dump") else tx.dict()
-        new_tx = Transaction(**data)
+        tx_cols = {c.name for c in Transaction.__table__.columns}
+        valid_data = {k: v for k, v in data.items() if k in tx_cols}
+        new_tx = Transaction(**valid_data)
         db.add(new_tx)
         db.commit()
 

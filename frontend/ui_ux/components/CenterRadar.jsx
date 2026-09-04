@@ -89,9 +89,9 @@ const CenterRadar = ({
       </div>
 
       {/* Map Container */}
-      <div className="w-full min-h-[360px] flex-1 bg-slate-900 rounded-sm relative overflow-hidden border border-slate-800 select-none">
+      <div className="w-full min-h-[450px] flex-1 bg-slate-900 rounded-sm relative overflow-hidden border border-slate-800 select-none">
         {viewMode === 'map' ? (
-          <div className="w-full h-[360px]">
+          <div className="w-full h-[450px]">
             <MapRadar
               locations={atms.map((a, i) => ({
                 id: a.id,
