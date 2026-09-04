@@ -97,6 +97,20 @@ def main():
         summarize()
         return
 
+    # The server replays its most recent alert to any newly connected client so
+    # a dashboard opened mid-shift is never blank. Drain that frame here or we
+    # would grade a previous run's prediction instead of the one we are about
+    # to fire.
+    replayed = 0
+    while True:
+        try:
+            ws.recv(timeout=2)
+            replayed += 1
+        except Exception:
+            break
+    if replayed:
+        print(f"  [note] drained {replayed} replayed alert(s) from a prior run")
+
     # ── 3. Fire the transaction the bank feed would send ───────────────────
     section("3. TRANSACTION INGESTION -> ML TRIGGER")
     tx_id = f"E2E-{int(time.time())}"
@@ -135,11 +149,24 @@ def main():
     section("4. ALERT DELIVERY OVER WEBSOCKET")
     alert = None
     try:
-        raw = ws.recv(timeout=45)
-        alert = json.loads(raw)
-        check("Dashboard received a broadcast alert", True, f"{len(raw)} bytes")
+        # Another dashboard (or a demo script) may be firing transactions at the
+        # same backend. Keep reading until we see the alert for OUR transaction
+        # rather than grading somebody else's.
+        deadline = time.time() + 45
+        while time.time() < deadline:
+            raw = ws.recv(timeout=max(1, int(deadline - time.time())))
+            candidate = json.loads(raw)
+            if tx_id in str(candidate.get("case_id", "")):
+                alert = candidate
+                check("Dashboard received a broadcast alert", True, f"{len(raw)} bytes")
+                break
+            print(f"  [note] skipped an unrelated alert ({candidate.get('case_id')})")
+        if alert is None:
+            check("Dashboard received a broadcast alert", False,
+                  "no alert for this transaction within 45 s")
     except Exception as e:
         check("Dashboard received a broadcast alert", False, f"{type(e).__name__}: {e}")
+
     finally:
         try:
             ws.close()

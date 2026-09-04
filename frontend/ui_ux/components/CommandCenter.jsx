@@ -5,6 +5,8 @@ import SidebarLeft from './SidebarLeft';
 import CenterRadar from './CenterRadar';
 import SidebarRight from './SidebarRight';
 import PoliceDispatchModal from './PoliceDispatchModal';
+import NavSidebar from './NavSidebar';
+import AllCasesView from './AllCasesView';
 import GisDashboard from '../../gis/components/GisDashboard.jsx';
 
 /**
@@ -282,8 +284,29 @@ const CommandCenter = () => {
     }
   };
 
+  // AllCasesView reads exactly the shape `activeCase` already has, so the case
+  // list is fed the real case rather than a mock caseload. When no alert has
+  // arrived the status says so instead of claiming an active investigation.
+  const caseList = [
+    {
+      ...activeCase,
+      status: liveMeta.isLive ? 'Active' : 'Sample',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col antialiased">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex antialiased">
+      {/* Role 4's NavSidebar. Its item ids (overview / cases / live_operations /
+          spatial_radar) already match this component's view names. Without it
+          there was no way to reach the GIS + H3 view or Live Incidents at all —
+          the map was rendered but unreachable. */}
+      <NavSidebar
+        currentView={currentView}
+        onSelectView={setCurrentView}
+        hasUnreadNotification={liveMeta.isLive}
+      />
+
+      <div className="flex-1 flex flex-col min-w-0">
       <Header
         currentView={currentView}
         onSelectView={setCurrentView}
@@ -454,7 +477,10 @@ const CommandCenter = () => {
                     <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Hourly Incident Log (Delhi NCR)</h3>
                     <p className="text-xs text-slate-500">Reported volume over past 24 hours</p>
                   </div>
-                  <span className="text-xs text-slate-500 font-mono">Total Today: 24 Cases</span>
+                  {/* Hardcoded distribution below — a sample caseload shape, not
+                      a count of anything this system observed. Labelled so it
+                      cannot be read as a measured result. */}
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider">Illustrative — not model output</span>
                 </div>
 
                 <div className="h-40 flex items-end justify-between gap-2 pt-4 px-2 border-b border-slate-100">
@@ -489,9 +515,12 @@ const CommandCenter = () => {
               </div>
 
               <div className="lg:col-span-4 bg-white rounded-sm border border-slate-200 p-4 space-y-3">
-                <div>
-                  <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Fraud Category Distribution</h3>
-                  <p className="text-xs text-slate-500">Breakdown of reported incident vectors</p>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Fraud Category Distribution</h3>
+                    <p className="text-xs text-slate-500">Breakdown of reported incident vectors</p>
+                  </div>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider text-right shrink-0">Illustrative</span>
                 </div>
 
                 <div className="space-y-3 pt-1">
@@ -647,6 +676,17 @@ const CommandCenter = () => {
             </div>
           </div>
         )}
+
+        {currentView === 'cases' && (
+          <AllCasesView
+            cases={caseList}
+            selectedCaseId={activeCase.case_id}
+            onSelectCase={() => {}}
+            onOpenLiveIncident={() => setCurrentView('live_operations')}
+            onOpenDispatchModal={() => setIsDispatchModalOpen(true)}
+            onOpenMap={() => setCurrentView('spatial_radar')}
+          />
+        )}
       </main>
 
       <PoliceDispatchModal
@@ -669,6 +709,7 @@ const CommandCenter = () => {
           }))
         }}
       />
+      </div>
     </div>
   );
 };
