@@ -23,13 +23,14 @@ services:
   # FastAPI Backend & WebSockets
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: drishti_backend
     environment:
       DATABASE_URL: postgresql://drishti_user:drishti_secret@postgres:5432/drishti_db
       MULE_TRIGGER_AMOUNT: 50000.0
       PYTHONUNBUFFERED: 1
+      PYTHONPATH: /app:/
     ports:
       - "8000:8000"
     depends_on:
