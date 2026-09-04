@@ -156,22 +156,6 @@ const NavSidebar = ({
           );
         })}
       </nav>
-
-      {/* 3. RESTRAINED FOOTER */}
-      <div className="p-3 border-t border-slate-200 text-xs space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-500 font-normal">
-          <span>Feed Status</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-            <span className="font-mono text-slate-700">1930 / I4C</span>
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-          <span className="truncate">Insp. V. Rawat</span>
-          <span className="text-xs font-mono text-slate-400">HQ-01</span>
-        </div>
-      </div>
     </aside>
   );
 };
