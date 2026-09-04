@@ -8,8 +8,18 @@ import enum
 # (Since the actual models and session are still missing in the codebase, 
 # this script defines them here so it can run successfully and create the SQLite DB).
 
-DATABASE_URL = "sqlite:///./drishti.db"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+import os
+import sys
+
+# Add the parent directory to sys.path so we can import 'app' module
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.core.config import settings
+
+DATABASE_URL = settings.DATABASE_URL
+if "sqlite" in DATABASE_URL:
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+else:
+    engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
