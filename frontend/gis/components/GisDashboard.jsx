@@ -144,7 +144,7 @@ export const GisDashboard = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-white font-mono uppercase">
-                GIS Spatio-Temporal Radar
+                Predicted Cash-Out Map
               </h1>
               <span className="hidden sm:inline-block px-2 py-0.5 rounded text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-semibold">
                 ROLE 3 • DRISHTI

@@ -291,7 +291,7 @@ const MapRadar = ({
         <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-lg border border-cyan-500/40 shadow-lg">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
           <span className="text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase">
-            GIS SPATIO-TEMPORAL RADAR
+            PREDICTED CASH-OUT MAP
           </span>
           <span className="hidden sm:inline-block text-xs font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40 font-semibold">
             {MAP_STYLES[currentStyleKey]?.label.toUpperCase()}
