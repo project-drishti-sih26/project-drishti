@@ -7,5 +7,7 @@ export { default as Alerts } from './components/Alerts';
 export { default as CaseFlow } from './components/CaseFlow';
 export { default as PoliceDispatchModal } from './components/PoliceDispatchModal';
 export { default as FeedbackActions } from './components/FeedbackActions';
+export { default as OverviewView } from './components/OverviewView';
+export { default as AllCasesView } from './components/AllCasesView';
 export { default as CommandCenter } from './components/CommandCenter';
 

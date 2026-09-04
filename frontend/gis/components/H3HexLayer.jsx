@@ -50,7 +50,7 @@ export const getH3BoundaryCoordinates = (h3Index, fallbackLat, fallbackLng) => {
     let boundary = null;
 
     // Support h3-js v4 API (cellToBoundary)
-    const getBoundary = h3.cellToBoundary || h3["h3ToGeoBoundary"];
+    const getBoundary = h3.cellToBoundary || h3.h3ToGeoBoundary;
     if (typeof getBoundary === 'function' && h3Index) {
       boundary = getBoundary(h3Index, true);
     }

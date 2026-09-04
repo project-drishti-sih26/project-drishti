@@ -8,12 +8,9 @@ import { MapLegend } from './MapLegend.jsx';
 import { mockLocations, mockActiveAlert } from '../mockData.js';
 
 /**
- * MapRadar Component (Role 3 - GIS Radar)
- * Project Drishti - Tactical Command Center Map
- * 
- * Interactive MapLibre GL JS + OpenFreeMap map visualizing predicted cashout locations,
- * Uber H3 danger hexes, tactical pulsating markers, and flyTo camera zooms.
- * Completely free, keyless, and open-source.
+ * MapRadar Component
+ * Live Location Map with MapLibre GL JS + OpenFreeMap.
+ * Clean, restrained enterprise styling with flat solid markers and standard grey attribution.
  */
 const MAP_STYLES = {
   streets: {
@@ -56,8 +53,8 @@ const MapRadar = ({
   onSelectLocation = () => {},
   centerCoordinates = [77.2090, 28.6139], // Default: New Delhi, India
   zoom = 12.5,
-  showTargetsPanel = true,
-  showLegend = true
+  showTargetsPanel = false,
+  showLegend = false
 }) => {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -94,14 +91,13 @@ const MapRadar = ({
       map.flyTo({
         center: [lng, lat],
         zoom: 15.2,
-        pitch: 50,
+        pitch: 45,
         bearing: -15,
         speed: 1.2,
         curve: 1.4,
         essential: true
       });
 
-      // Automatically open the popup for the selected marker
       const popup = popupsRef.current.get(target.id);
       const marker = markersRef.current.get(target.id);
       if (popup && marker) {
@@ -110,7 +106,7 @@ const MapRadar = ({
     }
   }, [onSelectLocation]);
 
-  // Sync external selectedLocationId prop and trigger flyTo when selection changes
+  // Sync external selectedLocationId prop
   useEffect(() => {
     if (selectedLocationId && selectedLocationId !== activeSelectedId) {
       setActiveSelectedId(selectedLocationId);
@@ -132,12 +128,11 @@ const MapRadar = ({
         style: 'https://tiles.openfreemap.org/styles/liberty',
         center: centerCoordinates,
         zoom: zoom,
-        pitch: 45,
-        bearing: -17.6,
+        pitch: 40,
+        bearing: -15,
         attributionControl: false
       });
 
-      // Add zoom and rotation navigation controls
       map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
       map.addControl(new maplibregl.FullscreenControl(), 'top-right');
       map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
@@ -148,11 +143,10 @@ const MapRadar = ({
 
       mapInstanceRef.current = map;
     } catch (err) {
-      console.error('[MapRadar] Error initializing MapLibre GL map:', err);
+      console.error('[MapRadar] Error initializing map:', err);
     }
 
     return () => {
-      // Memory cleanup when component is destroyed
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current.clear();
       popupsRef.current.clear();
@@ -164,19 +158,17 @@ const MapRadar = ({
     };
   }, []);
 
-  // Render Markers and H3 Hex Layers when data or map loads
+  // Render Markers and H3 Hex Layers
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear existing markers from DOM
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current.clear();
     popupsRef.current.clear();
 
     if (!locations || locations.length === 0) return;
 
-    // Render Markers for each location
     locations.forEach((loc, index) => {
       const rank = loc.rank || index + 1;
       const isSelected = activeSelectedId === loc.id;
@@ -186,51 +178,33 @@ const MapRadar = ({
       if (isNaN(lng) || isNaN(lat)) return;
 
       const markerEl = renderCustomMarker(loc, rank, isSelected);
-
       const scorePercent = Math.round((loc.riskScore || loc.score || 0.8) * 100);
-      const typeLabel = loc.type || 'ATM';
 
-      // Popup formatted as required:
-      // Location name, Location type, Risk score, Rank, Expected window
       const popupHtml = `
-        <div class="p-3 bg-slate-950 text-slate-100 rounded-lg border border-cyan-500/40 shadow-2xl font-sans text-xs min-w-[200px]">
-          <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-800">
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
-              rank === 1 ? 'bg-red-500/30 text-red-400 border border-red-500/50' : 'bg-slate-800 text-cyan-300'
+        <div class="p-3 bg-white text-slate-900 rounded-[4px] border border-slate-200 shadow-lg font-sans text-xs min-w-[200px]">
+          <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100">
+            <span class="px-1.5 py-0.5 rounded-[3px] text-[10px] font-mono font-medium ${
+              rank === 1 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-slate-100 text-slate-700 border border-slate-200'
             }">
-              RANK #${rank}
+              Rank #${rank}
             </span>
-            <span class="text-[10px] font-mono uppercase text-slate-400 font-semibold">${typeLabel}</span>
+            <span class="text-[10px] font-mono text-slate-500 font-normal">ATM Node</span>
           </div>
-          <p class="font-bold text-slate-100 text-sm leading-snug">${loc.name || 'Target Node'}</p>
-          ${loc.address ? `<p class="text-[11px] text-slate-400 mt-1 leading-tight">${loc.address}</p>` : ''}
-          <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between font-mono text-[11px]">
-            <span class="text-slate-400">Risk Score:</span>
-            <span class="font-bold ${scorePercent >= 85 ? 'text-red-400' : 'text-amber-400'}">${scorePercent}%</span>
+          <p class="font-medium text-slate-900 text-xs leading-snug">${loc.name || loc.bank_name || 'Target Node'}</p>
+          ${loc.address ? `<p class="text-[11px] text-slate-500 mt-1 leading-tight font-normal">${loc.address}</p>` : ''}
+          <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between font-mono text-[11px]">
+            <span class="text-slate-500">Probability:</span>
+            <span class="font-medium ${scorePercent >= 85 ? 'text-rose-700' : 'text-slate-800'}">${scorePercent}%</span>
           </div>
-          ${loc.travelTime ? `
-            <div class="mt-1 flex items-center justify-between font-mono text-[11px]">
-              <span class="text-slate-400">Travel Time:</span>
-              <span class="text-cyan-300">~${loc.travelTime}</span>
-            </div>
-          ` : ''}
-          ${loc.expectedWindow ? `
-            <div class="mt-1 flex items-center justify-between font-mono text-[11px]">
-              <span class="text-slate-400">Window:</span>
-              <span class="text-amber-300">${loc.expectedWindow}</span>
-            </div>
-          ` : ''}
         </div>
       `;
 
       const popup = new maplibregl.Popup({
-        offset: 28,
+        offset: 20,
         closeButton: true,
-        closeOnClick: false,
-        className: 'tactical-gis-popup'
+        closeOnClick: false
       }).setHTML(popupHtml);
 
-      // Add click handler to marker
       markerEl.addEventListener('click', (e) => {
         e.stopPropagation();
         flyToTarget(loc);
@@ -248,12 +222,11 @@ const MapRadar = ({
       popupsRef.current.set(loc.id, popup);
     });
 
-    // Update H3 Spatial candidate hex layer with real H3 boundaries
     const renderHexes = () => {
       try {
         addH3HexLayers(map, riskCells || locations);
       } catch (err) {
-        console.warn('[MapRadar] H3 Layer render warning:', err);
+        console.warn('[MapRadar] H3 Layer warning:', err);
       }
     };
 
@@ -265,44 +238,34 @@ const MapRadar = ({
   }, [locations, riskCells, activeSelectedId, isMapLoaded, flyToTarget, currentStyleKey]);
 
   return (
-    <div className="relative w-full h-full min-h-[600px] overflow-hidden rounded-2xl border border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.15)] bg-slate-950 flex flex-col">
-      {/* Tactical HUD Header Bar */}
-      <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2 pointer-events-auto">
-        <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-lg border border-cyan-500/40 shadow-lg">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-          <span className="text-xs font-mono font-bold tracking-widest text-cyan-300 uppercase">
-            GIS SPATIO-TEMPORAL RADAR
-          </span>
-          <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/40 font-semibold">
-            {MAP_STYLES[currentStyleKey]?.label.toUpperCase()}
-          </span>
-        </div>
-
-        {/* Real Interactive Basemap Switcher */}
-        <div className="flex items-center bg-slate-900/90 backdrop-blur-md border border-cyan-500/40 rounded-lg p-0.5 shadow-lg gap-0.5">
-          {Object.entries(MAP_STYLES).map(([key, item]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => handleStyleChange(key)}
-              className={`px-2 py-1 text-[11px] font-mono font-medium rounded transition-all cursor-pointer ${
-                currentStyleKey === key
-                  ? 'bg-cyan-500 text-slate-950 font-bold shadow'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              {key === 'streets' && '🗺️ '}
-              {key === 'satellite' && '🛰️ '}
-              {key === 'dark' && '🌑 '}
-              {item.label}
-            </button>
-          ))}
-        </div>
+    <div className="relative w-full h-full min-h-[360px] overflow-hidden rounded-[4px] border border-slate-200 bg-slate-100 flex flex-col">
+      {/* Restrained Basemap Switcher */}
+      <div className="absolute top-2 left-2 z-10 flex items-center bg-white/95 backdrop-blur-sm border border-slate-200 rounded-[3px] p-0.5 shadow-sm gap-0.5 pointer-events-auto">
+        {Object.entries(MAP_STYLES).map(([key, item]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => handleStyleChange(key)}
+            className={`px-2 py-0.5 text-[10px] font-mono rounded-[2px] transition-colors cursor-pointer ${
+              currentStyleKey === key
+                ? 'bg-slate-900 text-white font-medium'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
-      {/* Floating Top Predicted Targets Panel (Left / Center) */}
+      {/* Small muted grey attribution in bottom-left corner */}
+      <div className="absolute bottom-2 left-2 z-10 pointer-events-none select-none">
+        <span className="text-[10px] text-slate-400 font-normal">
+          © OpenFreeMap • MapLibre
+        </span>
+      </div>
+
       {showTargetsPanel && locations && locations.length > 0 && (
-        <div className="absolute bottom-4 left-3 z-10 max-w-xs sm:max-w-sm pointer-events-auto">
+        <div className="absolute bottom-4 left-3 z-10 max-w-xs pointer-events-auto">
           <TopTargetsPanel
             targets={locations}
             selectedTargetId={activeSelectedId}
@@ -311,7 +274,6 @@ const MapRadar = ({
         </div>
       )}
 
-      {/* Floating Tactical Legend (Bottom-Right) */}
       {showLegend && (
         <div className="absolute bottom-4 right-14 z-10 pointer-events-auto hidden md:block">
           <MapLegend />
@@ -319,10 +281,9 @@ const MapRadar = ({
       )}
 
       {/* MapLibre Canvas Container */}
-      <div ref={mapContainerRef} className="w-full h-full min-h-[600px] flex-1" />
+      <div ref={mapContainerRef} className="w-full h-full min-h-[360px] flex-1" />
     </div>
   );
 };
 
 export default MapRadar;
-
